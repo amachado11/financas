@@ -1,229 +1,141 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!DOCTYPE html><html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite</title>
-    <style>
-        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; }
-        .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
-        .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
-        .aba { display: none; }
-        .aba.ativa { display: block; }
-        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* CALENDÁRIO */
-        .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .resumo-topo-cal { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 12px; border: 1px solid #eee; }
-        .resumo-item { text-align: center; }
-        .resumo-item b { display: block; font-size: 14px; }
-        .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 5px; }
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
-        .dia { background: white; min-height: 80px; padding: 5px; display: flex; flex-direction: column; font-size: 11px; }
-        .dia.hoje { background: #eef7ff; border: 1px solid var(--primaria); }
-        .fds { background: #f9f9f9; }
-        .saldo-d { margin-top: auto; font-weight: bold; text-align: right; font-size: 10px; }
-
-        /* NAVEGAÇÃO */
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 80px; border-top: 2px solid #eee; z-index: 9999; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: #888; }
-        .nav-btn.ativo { color: var(--primaria); font-weight: bold; }
-        
-        input, select, button { width: 100%; padding: 14px; margin: 5px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; }
-        .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; text-transform: uppercase; }
-        .btn-acao { width: 35px; height: 35px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #f2f2f7; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Finanças Master Elite</title>
+<style>
+:root { --primaria:#007AFF; --ganho:#34C759; --gasto:#FF3B30; --fundo:#F2F2F7; }
+body { font-family:sans-serif; margin:0; background:var(--fundo); }
+.header { background:white; padding:15px; text-align:center; font-weight:bold; }
+.card { background:white; padding:15px; border-radius:12px; margin:10px; }
+.aba { display:none; }
+.ativa { display:block; }
+.nav { position:fixed; bottom:0; width:100%; display:flex; background:white; }
+.nav button { flex:1; padding:15px; border:none; background:none; }
+canvas { width:100%; }
+</style>
 </head>
-<body>
-
-<div class="header">Finanças Master Elite</div>
-
-<div class="conteudo">
-    <div id="aba-add" class="aba ativa">
-        <div class="card">
-            <input type="hidden" id="edit-id">
-            <input type="date" id="data">
-            <input type="text" id="desc" placeholder="Descrição">
-            <input type="number" id="valor" placeholder="R$ 0,00" inputmode="decimal">
-            <select id="cat">
-                <option value="Alimentação">🍕 Alimentação</option>
-                <option value="Transporte">🚗 Transporte</option>
-                <option value="Lazer">🎡 Lazer</option>
-                <option value="Contas">🏠 Contas Fixas</option>
-                <option value="Saúde">🏥 Saúde</option>
-                <option value="Mercado">🛒 Mercado</option>
-                <option value="Salário">💰 Salário/Renda</option>
-                <option value="Outros">⚙️ Outros</option>
-            </select>
-            <select id="tipo"><option value="gasto">Despesa (-)</option><option value="ganho">Ganho (+)</option></select>
-            <button id="btn-salvar" class="btn-principal" onclick="salvar()">Salvar Lançamento</button>
-            <button id="btn-cancelar" style="display:none; background:#888; color:white;" onclick="cancelarEdicao()">Cancelar</button>
-        </div>
-        <div id="lista" class="card"></div>
-    </div>
-
-    <div id="aba-cal" class="aba">
-        <div class="seletor-mes-container">
-            <button onclick="mudarMes(-1)" style="width:50px; border:none; background:none; font-size:20px">❮</button>
-            <span id="mes-label" style="font-size:18px; font-weight:bold"></span>
-            <button onclick="mudarMes(1)" style="width:50px; border:none; background:none; font-size:20px">❯</button>
-        </div>
-        <div class="resumo-topo-cal">
-            <div class="resumo-item">Ganhos<b style="color:var(--ganho)" id="res-ganho">R$ 0</b></div>
-            <div class="resumo-item">Gastos<b style="color:var(--gasto)" id="res-gasto">R$ 0</b></div>
-            <div class="resumo-item">Saldo<b id="res-saldo">R$ 0</b></div>
-        </div>
-        <div class="dias-semana-topo">
-            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
-        </div>
-        <div class="grid" id="grid"></div>
-    </div>
-
-    <div id="aba-rel" class="aba">
-        <div class="card">
-            <input type="month" id="rel-mes" onchange="gerarRel()">
-            <div id="resumo-total"></div>
-        </div>
-        <div id="resumo-categorias" class="card">
-            <div id="cat-lista"></div>
-        </div>
-    </div>
+<body><div class="header">Finanças Master Elite</div><div id="aba-add" class="aba ativa">
+<div class="card">
+<input type="hidden" id="edit-id">
+<input type="date" id="data">
+<input type="text" id="desc" placeholder="Descrição">
+<input type="number" id="valor" placeholder="Valor">
+<select id="cat">
+<option>Alimentação</option><option>Transporte</option><option>Lazer</option><option>Contas</option><option>Saúde</option><option>Mercado</option><option>Salário</option><option>Outros</option>
+</select>
+<select id="tipo"><option value="gasto">Gasto</option><option value="ganho">Ganho</option></select>
+<button onclick="salvar()">Salvar</button>
 </div>
-
-<div class="nav">
-    <button class="nav-btn ativo" onclick="ir('add', this)">➕ Lançar</button>
-    <button class="nav-btn" onclick="ir('cal', this)">📅 Calendário</button>
-    <button class="nav-btn" onclick="ir('rel', this)">📊 Gráficos</button>
+<div id="lista" class="card"></div>
+</div><div id="aba-cal" class="aba">
+<div class="card" id="grid"></div>
+</div><div id="aba-rel" class="aba">
+<div class="card">
+<input type="month" id="rel-mes" onchange="gerarRel()">
+<div id="resumo-total"></div>
 </div>
+<div class="card"><canvas id="graficoPizza" height="200"></canvas></div>
+<div class="card"><canvas id="graficoLinha" height="200"></canvas></div>
+<div class="card" id="cat-lista"></div>
+</div><div class="nav">
+<button onclick="ir('add')">➕</button>
+<button onclick="ir('cal')">📅</button>
+<button onclick="ir('rel')">📊</button>
+</div><script>
+let db;
+try { db = JSON.parse(localStorage.getItem('financas_v_final')) || []; } catch { db = []; }
 
-<script>
-    let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
-    let dataRef = new Date();
+const coresCat = {
+'Alimentação':'#FF9500','Transporte':'#5AC8FA','Lazer':'#AF52DE','Contas':'#FF3B30','Saúde':'#FF2D55','Mercado':'#FFCC00','Salário':'#34C759','Outros':'#8E8E93'
+};
 
-    const coresCat = {
-        'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Lazer': '#AF52DE', 
-        'Contas': '#FF3B30', 'Saúde': '#FF2D55', 'Mercado': '#FFCC00', 
-        'Salário': '#34C759', 'Outros': '#8E8E93'
-    };
+function ir(a){ document.querySelectorAll('.aba').forEach(x=>x.classList.remove('ativa')); document.getElementById('aba-'+a).classList.add('ativa'); if(a==='rel') gerarRel(); if(a==='add') listar(); }
 
-    function ir(aba, btn) {
-        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
-        document.getElementById('aba-' + aba).classList.add('ativa');
-        btn.classList.add('ativo');
-        if(aba === 'cal') render();
-        if(aba === 'add') listar();
-        if(aba === 'rel') gerarRel();
-    }
+function salvar(){
+ const d=document.getElementById('data').value;
+ const v=parseFloat(document.getElementById('valor').value);
+ if(!d||isNaN(v)) return alert('Preencha');
+ db.push({id:Date.now(),data:d,desc:document.getElementById('desc').value||'S/N',valor:v,tipo:document.getElementById('tipo').value,cat:document.getElementById('cat').value});
+ localStorage.setItem('financas_v_final',JSON.stringify(db));
+ listar();
+}
 
-    function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
+function listar(){
+ const l=document.getElementById('lista');
+ l.innerHTML='';
+ db.slice().reverse().forEach(i=>{
+  l.innerHTML+=`<div>${i.data} - ${i.desc} - R$ ${i.valor}</div>`;
+ });
+}
 
-    function salvar() {
-        const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
-        const editId = document.getElementById('edit-id').value;
-        if(!d || isNaN(v)) return alert("Preencha os campos!");
-        const item = { id: editId ? parseInt(editId) : Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
-        if(editId) db = db.map(i => i.id === parseInt(editId) ? item : i);
-        else db.push(item);
-        localStorage.setItem('financas_v_final', JSON.stringify(db));
-        cancelarEdicao(); listar(); alert("Salvo!");
-    }
+function gerarRel(){
+ const mesSel=document.getElementById('rel-mes').value;
+ const filtrados=db.filter(i=>i.data.startsWith(mesSel));
+ let g=0,s=0,cats={};
+ filtrados.forEach(i=>{
+  if(i.tipo==='ganho') g+=i.valor;
+  else { s+=i.valor; cats[i.cat]=(cats[i.cat]||0)+i.valor; }
+ });
 
-    function prepararEdicao(id) {
-        const i = db.find(x => x.id === id);
-        document.getElementById('edit-id').value = i.id;
-        document.getElementById('data').value = i.data;
-        document.getElementById('desc').value = i.desc;
-        document.getElementById('valor').value = i.valor;
-        document.getElementById('cat').value = i.cat;
-        document.getElementById('tipo').value = i.tipo;
-        document.getElementById('btn-salvar').innerText = "Atualizar";
-        document.getElementById('btn-salvar').style.background = "var(--edicao)";
-        document.getElementById('btn-cancelar').style.display = "block";
-        window.scrollTo(0,0);
-    }
+ document.getElementById('resumo-total').innerHTML=`Ganhos: R$ ${g.toFixed(2)}<br>Gastos: R$ ${s.toFixed(2)}<br><b>Saldo: R$ ${(g-s).toFixed(2)}</b>`;
 
-    function cancelarEdicao() {
-        document.getElementById('edit-id').value = "";
-        document.getElementById('data').valueAsDate = new Date();
-        document.getElementById('desc').value = ""; document.getElementById('valor').value = "";
-        document.getElementById('btn-salvar').innerText = "Salvar Lançamento";
-        document.getElementById('btn-salvar').style.background = "var(--primaria)";
-        document.getElementById('btn-cancelar').style.display = "none";
-    }
+ desenharPizza(cats);
+ graficoLinha(mesSel);
 
-    function deletar(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id !== id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); } }
+ const catLista=document.getElementById('cat-lista');
+ catLista.innerHTML='<b>Categorias</b><br>';
+ Object.entries(cats).forEach(([c,v])=>{
+  catLista.innerHTML+=`${c}: R$ ${v.toFixed(2)}<br>`;
+ });
+}
 
-    function listar() {
-        const l = document.getElementById('lista'), m = dataRef.toISOString().substring(0, 7);
-        l.innerHTML = "<strong>Histórico</strong>";
-        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
-            l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br>${i.desc}<br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><div class="acoes"><button onclick="prepararEdicao(${i.id})" class="btn-acao">✏️</button><button onclick="deletar(${i.id})" class="btn-acao">🗑️</button></div></div>`;
-        });
-    }
+function desenharPizza(cats){
+ const canvas=document.getElementById('graficoPizza');
+ const ctx=canvas.getContext('2d');
+ const total=Object.values(cats).reduce((a,b)=>a+b,0);
+ let inicio=0;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ Object.entries(cats).forEach(([cat,val])=>{
+  const fatia=(val/total)*2*Math.PI;
+  ctx.beginPath();
+  ctx.moveTo(150,100);
+  ctx.arc(150,100,80,inicio,inicio+fatia);
+  ctx.fillStyle=coresCat[cat]||'#ccc';
+  ctx.fill();
+  inicio+=fatia;
+ });
+}
 
-    function render() {
-        const g = document.getElementById('grid'), label = document.getElementById('mes-label');
-        const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
-        const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        label.innerText = nomes[mes] + " " + ano;
-        g.innerHTML = "";
-        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
-        let saldoAcumulado = 0, ganhoMes = 0, gastoMes = 0;
-        
-        db.forEach(i => {
-            const dataItem = new Date(i.data + "T00:00:00");
-            if(dataItem < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo=='ganho' ? i.valor : -i.valor);
-            else if(i.data.startsWith(dataRef.toISOString().substring(0,7))) {
-                if(i.tipo == 'ganho') ganhoMes += i.valor; else gastoMes += i.valor;
-            }
-        });
+function graficoLinha(mesSel){
+ const canvas=document.getElementById('graficoLinha');
+ const ctx=canvas.getContext('2d');
+ let saldo=0;
+ const dados=[];
+ db.filter(i=>i.data.startsWith(mesSel))
+ .sort((a,b)=>a.data.localeCompare(b.data))
+ .forEach(i=>{ saldo+=(i.tipo==='ganho'?i.valor:-i.valor); dados.push(saldo); });
+ if(dados.length===0) return;
+ const max=Math.max(...dados);
+ const min=Math.min(...dados);
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ let x=10;
+ const passo=(canvas.width-20)/dados.length;
+ ctx.beginPath();
+ dados.forEach((v,i)=>{
+  const y=canvas.height-((v-min)/(max-min||1))*canvas.height;
+  if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  x+=passo;
+ });
+ ctx.strokeStyle='#007AFF';
+ ctx.stroke();
+}
 
-        document.getElementById('res-ganho').innerText = "R$ " + ganhoMes.toFixed(0);
-        document.getElementById('res-gasto').innerText = "R$ " + gastoMes.toFixed(0);
-        document.getElementById('res-saldo').innerText = "R$ " + (ganhoMes - gastoMes).toFixed(0);
-        document.getElementById('res-saldo').style.color = (ganhoMes - gastoMes) >= 0 ? 'var(--ganho)' : 'var(--gasto)';
-
-        for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#eee"></div>`;
-        for(let d=1; d<=fim; d++) {
-            const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const eFimSemana = ([0,6].includes(new Date(ano, mes, d).getDay()));
-            db.filter(x => x.data === dataI).forEach(i => saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor));
-            g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''} ${eFimSemana?'fds':''}">
-                <b>${d}</b><div class="saldo-d" style="color:${saldoAcumulado>=0?'green':'red'}">${saldoAcumulado.toFixed(0)}</div>
-            </div>`;
-        }
-    }
-
-    function gerarRel() {
-        const mesSel = document.getElementById('rel-mes').value || dataRef.toISOString().substring(0, 7);
-        const filtrados = db.filter(it => it.data.startsWith(mesSel));
-        let g=0, s=0, cats = {};
-        filtrados.forEach(it => { if(it.tipo === 'ganho') g += it.valor; else { s += it.valor; cats[it.cat] = (cats[it.cat] || 0) + it.valor; } });
-
-        const percGasta = g > 0 ? Math.min((s/g)*100, 100) : 0;
-        document.getElementById('resumo-total').innerHTML = `
-            <div style="margin-bottom:15px">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px"><span>Consumo da Renda</span><span>${percGasta.toFixed(1)}%</span></div>
-                <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden"><div style="background:${percGasta>90?'red':'var(--primaria)'}; height:100%; width:${percGasta}%"></div></div>
-            </div>
-            Ganhos: <span style="color:green">R$ ${g.toFixed(2)}</span><br>Gastos: <span style="color:red">R$ ${s.toFixed(2)}</span><hr>Saldo: <strong>R$ ${(g-s).toFixed(2)}</strong>`;
-
-        const catLista = document.getElementById('cat-lista'); catLista.innerHTML = "<strong>Gastos por Categoria</strong><br><br>";
-        Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, val]) => {
-            const p = (val/s*100).toFixed(0);
-            catLista.innerHTML += `<div style="margin-bottom:12px">
-                <div style="display:flex; justify-content:space-between; font-size:14px"><span>${c}</span><span>R$ ${val.toFixed(2)} (${p}%)</span></div>
-                <div style="background:#eee; height:8px; border-radius:4px; margin-top:4px"><div style="background:${coresCat[c]||'#ccc'}; height:8px; border-radius:4px; width:${p}%"></div></div>
-            </div>`;
-        });
-    }
-
-    window.onload = () => { document.getElementById('data').valueAsDate = new Date(); document.getElementById('rel-mes').value = dataRef.toISOString().substring(0,7); listar(); render(); };
-</script>
-</body>
+window.onload=()=>{
+ document.getElementById('data').valueAsDate=new Date();
+ document.getElementById('rel-mes').value=new Date().toISOString().substring(0,7);
+ listar();
+ gerarRel();
+};
+</script></body>
 </html>
