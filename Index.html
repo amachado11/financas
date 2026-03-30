@@ -2,152 +2,151 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Finanças Master</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; }
-        body { font-family: sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .header { background: white; padding: 15px; border-bottom: 1px solid #d1d1d6; text-align: center; flex-shrink: 0; }
-        .container { flex: 1; overflow-y: auto; padding: 10px; position: relative; }
-        .aba { display: none; flex-direction: column; height: 100%; }
-        .aba.ativa { display: flex; }
-        .card { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .seletor-mes { display: flex; justify-content: space-between; align-items: center; padding: 10px; font-weight: bold; }
-        .btn-seta { background: #e5e5ea; border: none; border-radius: 50%; width: 35px; height: 35px; color: var(--primaria); }
-        .calendario-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #d1d1d6; border-radius: 12px; flex: 1; min-height: 350px; }
-        .dia { background: white; padding: 4px; display: flex; flex-direction: column; font-size: 11px; }
-        .dia-topo { font-weight: bold; color: #8e8e93; }
-        .hoje { background: #eef7ff; }
-        .saldo-dia { margin-top: auto; font-weight: bold; text-align: right; font-size: 9px; }
-        .nav-bottom { background: white; display: flex; border-top: 1px solid #d1d1d6; height: 70px; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8e8e93; font-size: 11px; }
-        .nav-item.ativa { color: var(--primaria); font-weight: bold; }
-        input, select, button { width: 100%; padding: 12px; margin: 4px 0; border-radius: 10px; border: 1px solid #d1d1d6; font-size: 16px; box-sizing: border-box; }
-        .btn-acao { background: var(--primaria); color: white; border: none; font-weight: bold; }
-        .item-lista { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; }
+        
+        .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; }
+        
+        .conteudo { flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 90px; }
+        .aba { display: none; }
+        .aba.ativa { display: block; }
+        
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* CALENDÁRIO GRANDE */
+        .seletor { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
+        .dia { background: white; min-height: 75px; padding: 4px; display: flex; flex-direction: column; font-size: 11px; }
+        .dia-n { font-weight: bold; color: #888; }
+        .dia.hoje { background: #eef7ff; }
+        .saldo-d { margin-top: auto; font-weight: bold; text-align: right; font-size: 10px; }
+
+        /* MENU INFERIOR FIXO */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #ddd; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #888; }
+        .nav-btn.ativo { color: var(--primaria); font-weight: bold; }
+
+        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
+        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3 style="margin:0">Finanças Master</h3></div>
+<div class="header">Finanças Master</div>
 
-<div class="container">
+<div class="conteudo">
     <div id="aba-add" class="aba ativa">
         <div class="card">
-            <input type="date" id="in-data">
-            <input type="text" id="in-desc" placeholder="Descrição">
-            <input type="number" id="in-valor" placeholder="R$ 0,00" inputmode="decimal">
-            <select id="in-tipo"><option value="ganho">Ganho (+)</option><option value="gasto">Despesa (-)</option></select>
-            <button class="btn-acao" onclick="salvar()">Salvar</button>
+            <input type="date" id="data">
+            <input type="text" id="desc" placeholder="Descrição">
+            <input type="number" id="valor" placeholder="R$ 0,00" inputmode="decimal">
+            <select id="tipo"><option value="ganho">Ganho (+)</option><option value="gasto">Despesa (-)</option></select>
+            <button class="btn-principal" onclick="salvar()">Salvar</button>
         </div>
-        <div class="card" style="flex: 1; overflow-y: auto;"><div id="lista-mes"></div></div>
+        <div id="lista" class="card"></div>
     </div>
 
     <div id="aba-cal" class="aba">
-        <div class="seletor-mes">
-            <button class="btn-seta" onclick="mudarMes(-1)">❮</button>
-            <span id="label-mes"></span>
-            <button class="btn-seta" onclick="mudarMes(1)">❯</button>
+        <div class="seletor">
+            <button onclick="mudarMes(-1)" style="width:40px">❮</button>
+            <span id="mes-label" style="font-weight:bold"></span>
+            <button onclick="mudarMes(1)" style="width:40px">❯</button>
         </div>
-        <div class="calendario-grid" id="grid-corpo"></div>
+        <div class="grid" id="grid"></div>
     </div>
 
     <div id="aba-rel" class="aba">
         <div class="card">
-            <input type="date" id="rel-ini">
-            <input type="date" id="rel-fim">
-            <button class="btn-acao" onclick="renderRel()">Gerar Relatório</button>
+            <input type="date" id="r-ini">
+            <input type="date" id="r-fim">
+            <button class="btn-principal" onclick="gerarRel()">Ver Relatório</button>
         </div>
         <div id="resumo" class="card"></div>
     </div>
 </div>
 
-<nav class="nav-bottom">
-    <button class="nav-item ativa" onclick="mudarAba('add', this)">➕ Lançar</button>
-    <button class="nav-item" onclick="mudarAba('cal', this)">📅 Calendário</button>
-    <button class="nav-item" onclick="mudarAba('rel', this)">📊 Relatório</button>
-</nav>
+<div class="nav">
+    <button class="nav-btn ativo" onclick="ir('add', this)">➕ Lançar</button>
+    <button class="nav-btn" onclick="ir('cal', this)">📅 Calendário</button>
+    <button class="nav-btn" onclick="ir('rel', this)">📊 Relatório</button>
+</div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
+    // RECUPERAÇÃO DE DADOS DE TODAS AS VERSÕES ANTERIORES
+    let db = JSON.parse(localStorage.getItem('financas_v_final')) || 
+             JSON.parse(localStorage.getItem('financas_v10')) || 
+             JSON.parse(localStorage.getItem('financas_v8')) || [];
+    
     let dataRef = new Date();
 
-    function mudarAba(aba, btn) {
-        document.querySelectorAll('.aba').forEach(a => a.style.display = 'none');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativa'));
-        document.getElementById('aba-' + aba).style.display = 'flex';
-        btn.classList.add('ativa');
-        if(aba === 'cal') renderCal();
-        if(aba === 'add') atualizarLista();
+    function ir(aba, btn) {
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+        document.getElementById('aba-' + aba).classList.add('ativa');
+        btn.classList.add('ativo');
+        if(aba === 'cal') render();
+        if(aba === 'add') listar();
     }
 
-    function mudarMes(dir) {
-        dataRef.setMonth(dataRef.getMonth() + dir);
-        renderCal();
-    }
+    function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
 
     function salvar() {
-        const d = document.getElementById('in-data').value;
-        const v = parseFloat(document.getElementById('in-valor').value);
-        if(!d || isNaN(v)) return alert("Dados inválidos!");
-        db.push({ id: Date.now(), data: d, desc: document.getElementById('in-desc').value || 'S/N', valor: v, tipo: document.getElementById('in-tipo').value });
-        db.sort((a,b) => new Date(a.data) - new Date(b.data));
+        const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
+        if(!d || isNaN(v)) return alert("Preencha tudo!");
+        db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        document.getElementById('in-valor').value = "";
-        atualizarLista();
+        document.getElementById('valor').value = "";
+        listar();
         alert("Salvo!");
     }
 
-    function excluir(id) {
-        if(confirm("Excluir?")) {
+    function deletar(id) {
+        if(confirm("Apagar?")) {
             db = db.filter(i => i.id !== id);
             localStorage.setItem('financas_v_final', JSON.stringify(db));
-            atualizarLista();
+            listar();
         }
     }
 
-    function atualizarLista() {
-        const l = document.getElementById('lista-mes');
-        const mesF = dataRef.toISOString().substring(0, 7);
-        l.innerHTML = "<strong>Itens do Mês</strong>";
-        db.filter(it => it.data.startsWith(mesF)).reverse().forEach(it => {
-            const c = it.tipo === 'ganho' ? 'var(--ganho)' : 'var(--gasto)';
-            l.innerHTML += `<div class="item-lista"><div><b>${it.desc}</b><br><small style="color:${c}">R$ ${it.valor.toFixed(2)}</small></div><button onclick="excluir(${it.id})" style="width:40px; padding:5px; background:red; color:white; border:none; border-radius:5px">X</button></div>`;
+    function listar() {
+        const l = document.getElementById('lista'), m = dataRef.toISOString().substring(0, 7);
+        l.innerHTML = "<strong>Lançamentos</strong>";
+        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
+            l.innerHTML += `<div class="item"><div>${i.desc}<br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><button onclick="deletar(${i.id})" style="width:30px; background:red; color:white; border:none; border-radius:5px">X</button></div>`;
         });
     }
 
-    function renderCal() {
-        const grid = document.getElementById('grid-corpo');
-        const ano = dataRef.getFullYear();
-        const mes = dataRef.getMonth();
-        const hoje = new Date().toISOString().substring(0, 10);
+    function render() {
+        const g = document.getElementById('grid'), label = document.getElementById('mes-label');
+        const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        document.getElementById('label-mes').innerText = nomes[mes] + " " + ano;
-        grid.innerHTML = "";
-        const inicio = new Date(ano, mes, 1).getDay();
-        const fim = new Date(ano, mes + 1, 0).getDate();
+        label.innerText = nomes[mes] + " " + ano;
+        g.innerHTML = "";
+        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes+1, 0).getDate();
         let saldo = 0;
-        db.forEach(it => { if(new Date(it.data + "T00:00:00") < new Date(ano, mes, 1)) saldo += (it.tipo==='ganho'?it.valor:-it.valor); });
-        for(let i=0; i<inicio; i++) grid.innerHTML += `<div class="dia" style="background:#eee"></div>`;
+        db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) saldo += (i.tipo=='ganho'?i.valor:-i.valor); });
+        for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#eee"></div>`;
         for(let d=1; d<=fim; d++) {
             const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            db.filter(x => x.data === dataI).forEach(it => { saldo += (it.tipo==='ganho'?it.valor:-it.valor); });
-            grid.innerHTML += `<div class="dia ${dataI===hoje?'hoje':''}"><b>${d}</b><div class="saldo-dia" style="color:${saldo>=0?'green':'red'}">${saldo.toFixed(0)}</div></div>`;
+            db.filter(x => x.data === dataI).forEach(i => saldo += (i.tipo=='ganho'?i.valor:-i.valor));
+            g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''}">
+                <span class="dia-n">${d}</span>
+                <div class="saldo-d" style="color:${saldo>=0?'green':'red'}">${saldo.toFixed(0)}</div>
+            </div>`;
         }
     }
 
-    function renderRel() {
-        const i = document.getElementById('rel-ini').value, f = document.getElementById('rel-fim').value;
-        if(!i || !f) return alert("Datas!");
-        let g=0, s=0; db.filter(it => it.data>=i && it.data<=f).forEach(it => it.tipo==='ganho'?g+=it.valor:s+=it.valor);
-        document.getElementById('resumo').innerHTML = `Ganhos: R$ ${g.toFixed(2)}<br>Gastos: R$ ${s.toFixed(2)}<br><b>Saldo: R$ ${(g-s).toFixed(2)}</b>`;
+    function gerarRel() {
+        const i = document.getElementById('r-ini').value, f = document.getElementById('r-fim').value;
+        let g=0, s=0; db.filter(it => it.data>=i && it.data<=f).forEach(it => it.tipo=='ganho'?g+=it.valor:s+=it.valor);
+        document.getElementById('resumo').innerHTML = `Ganhos: R$ ${g.toFixed(2)}<br>Gastos: R$ ${s.toFixed(2)}<hr>Saldo: R$ ${(g-s).toFixed(2)}`;
     }
 
-    window.onload = () => {
-        document.getElementById('in-data').valueAsDate = new Date();
-        renderCal();
-        atualizarLista();
-    };
+    window.onload = () => { document.getElementById('data').valueAsDate = new Date(); listar(); };
 </script>
 </body>
 </html>
