@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financeiro Pro v6</title>
+    <style>
+        :root { --primaria: #0d6efd; --ganho: #198754; --gasto: #dc3545; --fundo: #f8f9fa; }
+        body { font-family: sans-serif; margin: 0; background: var(--fundo); padding-bottom: 90px; }
+        .header { background: var(--primaria); color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .container { padding: 10px; }
+        .aba { display: none; }
+        .aba.ativa { display: block; }
+        .card { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        /* LISTA DE EDIÇÃO */
+        .item-lista { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .btn-del { background: #ff4d4d; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; }
+
+        /* CALENDÁRIO */
+        .calendario-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; }
+        .dia { background: white; min-height: 80px; padding: 3px; font-size: 10px; display: flex; flex-direction: column; }
+        .dia-topo { font-weight: bold; border-bottom: 1px solid #f0f0f0; margin-bottom: 2px; }
+        .mov-item { font-size: 8px; margin-bottom: 1px; padding: 1px; border-radius: 2px; }
+        .futuro { opacity: 0.6; font-style: italic; }
+        .saldo-dia { margin-top: auto; font-size: 9px; font-weight: bold; text-align: right; border-top: 1px solid #eee; }
+
+        /* NAV */
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; height: 70px; }
+        .nav-item { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #666; }
+        .nav-item.ativa { color: var(--primaria); font-weight: bold; }
+
+        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn-salvar { background: var(--primaria); color: white; border: none; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="header" id="titulo">Financeiro</div>
+
+<div class="container">
+    <div id="aba-add" class="aba ativa">
+        <div class="card">
+            <input type="date" id="in-data">
+            <input type="text" id="in-desc" placeholder="Ex: Aluguel, Salário...">
+            <input type="number" id="in-valor" placeholder="0.00">
+            <select id="in-tipo">
+                <option value="ganho">Ganho (+)</option>
+                <option value="gasto">Gasto (-)</option>
+            </select>
+            <button class="btn-salvar" onclick="salvar()">Salvar Lançamento</button>
+        </div>
+        
+        <div class="card">
+            <h4 style="margin:0 0 10px 0">Histórico Recente</h4>
+            <div id="lista-recente"></div>
+        </div>
+    </div>
+
+    <div id="aba-cal" class="aba">
+        <div class="card"><input type="month" id="sel-mes" onchange="renderCal()"></div>
+        <div class="calendario-grid" id="grid-corpo"></div>
+    </div>
+
+    <div id="aba-rel" class="aba">
+        <div class="card" id="resumo-total"></div>
+        <button onclick="limparTudo()" style="background:#666; color:white">Zerar Aplicativo</button>
+    </div>
+</div>
+
+<nav class="nav-bottom">
+    <button class="nav-item ativa" onclick="mudar('add', this)">➕ Lançar</button>
+    <button class="nav-item" onclick="mudar('cal', this)">📅 Calendário</button>
+    <button class="nav-item" onclick="mudar('rel', this)">📊 Relatório</button>
+</nav>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('financas_v6')) || [];
+
+    window.onload = () => {
+        const h = new Date();
+        document.getElementById('in-data').valueAsDate = h;
+        document.getElementById('sel-mes').value = h.toISOString().substring(0, 7);
+        atualizarListaRecente();
+    };
+
+    function mudar(aba, btn) {
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativa'));
+        document.getElementById('aba-'+aba).classList.add('ativa');
+        btn.classList.add('ativa');
+        if(aba === 'cal') renderCal();
+        if(aba === 'rel') renderRel();
+    }
+
+    function salvar() {
+        const data = document.getElementById('in-data').value;
+        const desc = document.getElementById('in-desc').value || "Sem descrição";
+        const valor = parseFloat(document.getElementById('in-valor').value);
+        const tipo = document.getElementById('in-tipo').value;
+
+        if(!data || isNaN(valor)) return alert("Preencha os campos!");
+
+        db.push({ id: Date.now(), data, desc, valor, tipo });
+        db.sort((a,b) => new Date(a.data) - new Date(b.data));
+        
+        localStorage.setItem('financas_v6', JSON.stringify(db));
+        document.getElementById('in-valor').value = "";
+        document.getElementById('in-desc').value = "";
+        atualizarListaRecente();
+        alert("Salvo!");
+    }
+
+    function excluir(id) {
+        if(confirm("Excluir este lançamento?")) {
+            db = db.filter(item => item.id !== id);
+            localStorage.setItem('financas_v6', JSON.stringify(db));
+            atualizarListaRecente();
+        }
+    }
+
+    function atualizarListaRecente() {
+        const lista = document.getElementById('lista-recente');
+        lista.innerHTML = "";
+        // Mostra os últimos 5 lançamentos
+        [...db].reverse().slice(0, 5).forEach(it => {
+            const cor = it.tipo === 'ganho' ? 'green' : 'red';
+            lista.innerHTML += `
+                <div class="item-lista">
+                    <div>
+                        <b>${it.desc}</b><br>
+                        <small>${it.data} - <span style="color:${cor}">R$ ${it.valor}</span></small>
+                    </div>
+                    <button class="btn-del" onclick="excluir(${it.id})">Apagar</button>
+                </div>`;
+        });
+    }
+
+    function renderCal() {
+        const grid = document.getElementById('grid-corpo');
+        const mesRef = document.getElementById('sel-mes').value;
+        grid.innerHTML = "";
+        
+        const [ano, mes] = mesRef.split('-').map(Number);
+        const primeiroDia = new Date(ano, mes-1, 1).getDay();
+        const ultimoDia = new Date(ano, mes, 0).getDate();
+        const hojeIso = new Date().toISOString().substring(0, 10);
+
+        let saldoAcumulado = 0;
+        db.forEach(item => {
+            if(new Date(item.data) < new Date(ano, mes-1, 1)) {
+                saldoAcumulado += (item.tipo === 'ganho' ? item.valor : -item.valor);
+            }
+        });
+
+        for(let i=0; i<primeiroDia; i++) grid.innerHTML += `<div class="dia" style="background:#eee"></div>`;
+
+        for(let d=1; d<=ultimoDia; d++) {
+            const dataIso = `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const itensDia = db.filter(x => x.data === dataIso);
+            const ehFuturo = dataIso > hojeIso;
+
+            let htmlMovs = "";
+            itensDia.forEach(it => {
+                const cor = it.tipo === 'ganho' ? 'var(--ganho)' : 'var(--gasto)';
+                saldoAcumulado += (it.tipo === 'ganho' ? it.valor : -it.valor);
+                htmlMovs += `<div class="mov-item ${ehFuturo?'futuro':''}" style="color:${cor}">
+                    ${it.desc.substring(0,6)}: ${it.tipo==='ganho'?'+':'-'}${it.valor.toFixed(0)}
+                </div>`;
+            });
+
+            grid.innerHTML += `
+                <div class="dia">
+                    <div class="dia-topo">${d}</div>
+                    <div style="flex-grow:1">${htmlMovs}</div>
+                    <div class="saldo-dia" style="color:${saldoAcumulado>=0?'green':'red'}">
+                        R$ ${saldoAcumulado.toFixed(0)}
+                    </div>
+                </div>`;
+        }
+    }
+
+    function renderRel() {
+        let g = 0, s = 0;
+        db.forEach(it => it.tipo === 'ganho' ? g += it.valor : s += it.valor);
+        document.getElementById('resumo-total').innerHTML = `
+            <h3>Resumo Vitalício</h3>
+            <p>Total Recebido: <b style="color:green">R$ ${g.toFixed(2)}</b></p>
+            <p>Total Pago: <b style="color:red">R$ ${s.toFixed(2)}</b></p>
+            <hr>
+            <h2>Saldo Atual: R$ ${(g-s).toFixed(2)}</h2>
+        `;
+    }
+
+    function limparTudo() {
+        if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); }
+    }
+</script>
+</body>
+</html>
