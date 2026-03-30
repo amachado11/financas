@@ -3,64 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master</title>
+    <title>Finanças Master Pro</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; }
         * { box-sizing: border-box; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; }
-        
-        /* Cabeçalho */
         .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
-        
-        /* Área de Conteúdo */
         .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
         .aba { display: none; }
         .aba.ativa { display: block; }
-        
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* Calendário */
-        .seletor { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border-radius: 10px; overflow: hidden; }
         .dia { background: white; min-height: 85px; padding: 5px; display: flex; flex-direction: column; font-size: 11px; }
         .dia.hoje { background: #eef7ff; border: 1px solid var(--primaria); }
         .saldo-d { margin-top: auto; font-weight: bold; text-align: right; font-size: 10px; }
-
-        /* MENU INFERIOR - FORÇADO PARA APARECER */
-        .nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0;
-            width: 100%; 
-            background: white; 
-            display: flex; 
-            height: 80px; 
-            border-top: 2px solid #eee; 
-            z-index: 9999; 
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .nav-btn { 
-            flex: 1; 
-            border: none; 
-            background: none; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 13px; 
-            color: #888;
-            outline: none;
-        }
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 80px; border-top: 2px solid #eee; z-index: 9999; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: #888; }
         .nav-btn.ativo { color: var(--primaria); font-weight: bold; }
-
         input, select, button { width: 100%; padding: 14px; margin: 5px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; }
         .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
         .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; text-transform: uppercase; }
+        .cat-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+        .barra-bg { background: #eee; height: 8px; border-radius: 4px; width: 100%; margin-top: 4px; }
+        .barra-fg { background: var(--primaria); height: 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="header">Finanças Master</div>
+<div class="header">Finanças Master Pro</div>
 
 <div class="conteudo">
     <div id="aba-add" class="aba ativa">
@@ -68,47 +39,51 @@
             <input type="date" id="data">
             <input type="text" id="desc" placeholder="O que comprou?">
             <input type="number" id="valor" placeholder="Valor R$" inputmode="decimal">
-            <select id="tipo"><option value="ganho">Ganho (+)</option><option value="gasto">Despesa (-)</option></select>
-            <button class="btn-principal" onclick="salvar()">Salvar Lançamento</button>
+            <select id="cat">
+                <option value="Alimentação">🍕 Alimentação</option>
+                <option value="Transporte">🚗 Transporte</option>
+                <option value="Lazer">🎡 Lazer</option>
+                <option value="Contas">🏠 Contas Fixas</option>
+                <option value="Saúde">🏥 Saúde</option>
+                <option value="Mercado">🛒 Mercado</option>
+                <option value="Salário">💰 Salário/Renda</option>
+                <option value="Outros">⚙️ Outros</option>
+            </select>
+            <select id="tipo"><option value="gasto">Despesa (-)</option><option value="ganho">Ganho (+)</option></select>
+            <button class="btn-principal" onclick="salvar()">Salvar</button>
         </div>
         <div id="lista" class="card"></div>
     </div>
 
     <div id="aba-cal" class="aba">
-        <div class="seletor">
-            <button onclick="mudarMes(-1)" style="width:50px; background:#eee; border:none; border-radius:10px; padding:10px">❮</button>
-            <span id="mes-label" style="font-size:18px"></span>
-            <button onclick="mudarMes(1)" style="width:50px; background:#eee; border:none; border-radius:10px; padding:10px">❯</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <button onclick="mudarMes(-1)" style="width:50px">❮</button>
+            <span id="mes-label" style="font-size:18px; font-weight:bold"></span>
+            <button onclick="mudarMes(1)" style="width:50px">❯</button>
         </div>
         <div class="grid" id="grid"></div>
     </div>
 
     <div id="aba-rel" class="aba">
         <div class="card">
-            <input type="date" id="r-ini">
-            <input type="date" id="r-fim">
-            <button class="btn-principal" onclick="gerarRel()">Ver Relatório</button>
+            <input type="month" id="rel-mes" onchange="gerarRel()">
+            <div id="resumo-total"></div>
         </div>
-        <div id="resumo" class="card"></div>
+        <div id="resumo-categorias" class="card">
+            <strong>Gastos por Categoria</strong>
+            <div id="cat-lista" style="margin-top:15px"></div>
+        </div>
     </div>
 </div>
 
 <div class="nav">
-    <button id="btn-add" class="nav-btn ativo" onclick="ir('add', this)">➕ Lançar</button>
-    <button id="btn-cal" class="nav-btn" onclick="ir('cal', this)">📅 Calendário</button>
-    <button id="btn-rel" class="nav-btn" onclick="ir('rel', this)">📊 Relatório</button>
+    <button class="nav-btn ativo" onclick="ir('add', this)">➕ Lançar</button>
+    <button class="nav-btn" onclick="ir('cal', this)">📅 Calendário</button>
+    <button class="nav-btn" onclick="ir('rel', this)">📊 Gráficos</button>
 </div>
 
 <script>
-    // FUNÇÃO "ASPIRADOR": Tenta ler todas as chaves de versões anteriores
-    let db = JSON.parse(localStorage.getItem('financas_v_final')) || 
-             JSON.parse(localStorage.getItem('financas_v10')) || 
-             JSON.parse(localStorage.getItem('financas_v8')) || 
-             JSON.parse(localStorage.getItem('financas_final')) || [];
-    
-    // Salva na chave definitiva para unificar
-    localStorage.setItem('financas_v_final', JSON.stringify(db));
-
+    let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
     let dataRef = new Date();
 
     function ir(aba, btn) {
@@ -118,6 +93,7 @@
         btn.classList.add('ativo');
         if(aba === 'cal') render();
         if(aba === 'add') listar();
+        if(aba === 'rel') gerarRel();
     }
 
     function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
@@ -125,28 +101,28 @@
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
         if(!d || isNaN(v)) return alert("Preencha os campos!");
-        db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value });
+        db.push({ 
+            id: Date.now(), 
+            data: d, 
+            desc: document.getElementById('desc').value || 'S/N', 
+            valor: v, 
+            tipo: document.getElementById('tipo').value,
+            cat: document.getElementById('cat').value 
+        });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        document.getElementById('valor').value = "";
-        listar();
-        alert("Salvo!");
+        document.getElementById('valor').value = ""; document.getElementById('desc').value = "";
+        listar(); alert("Salvo!");
     }
 
     function deletar(id) {
-        if(confirm("Apagar item?")) {
-            db = db.filter(i => i.id !== id);
-            localStorage.setItem('financas_v_final', JSON.stringify(db));
-            listar();
-        }
+        if(confirm("Apagar?")) { db = db.filter(i => i.id !== id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); }
     }
 
     function listar() {
         const l = document.getElementById('lista'), m = dataRef.toISOString().substring(0, 7);
-        l.innerHTML = "<strong>Lançamentos deste mês</strong>";
-        const filtrados = db.filter(i => i.data.startsWith(m)).reverse();
-        if(filtrados.length === 0) l.innerHTML += "<p style='color:#888'>Nenhum item.</p>";
-        filtrados.forEach(i => {
-            l.innerHTML += `<div class="item"><div>${i.desc}<br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><button onclick="deletar(${i.id})" style="width:35px; background:#ffeded; color:red; border:1px solid red; border-radius:8px">X</button></div>`;
+        l.innerHTML = "<strong>Lançamentos de " + document.getElementById('mes-label').innerText + "</strong>";
+        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
+            l.innerHTML += `<div class="item"><div><span class="tag">${i.cat}</span><br>${i.desc}<br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><button onclick="deletar(${i.id})" style="width:35px; background:#fee; color:red; border:none; border-radius:8px">X</button></div>`;
         });
     }
 
@@ -163,21 +139,38 @@
         for(let d=1; d<=fim; d++) {
             const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             db.filter(x => x.data === dataI).forEach(i => saldo += (i.tipo=='ganho'?i.valor:-i.valor));
-            const hoje = new Date().toISOString().substring(0,10);
-            g.innerHTML += `<div class="dia ${dataI==hoje?'hoje':''}"><b>${d}</b><div class="saldo-d" style="color:${saldo>=0?'green':'red'}">${saldo.toFixed(0)}</div></div>`;
+            g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''}"><b>${d}</b><div class="saldo-d" style="color:${saldo>=0?'green':'red'}">${saldo.toFixed(0)}</div></div>`;
         }
     }
 
     function gerarRel() {
-        const i = document.getElementById('r-ini').value, f = document.getElementById('r-fim').value;
-        if(!i || !f) return alert("Datas!");
-        let g=0, s=0; db.filter(it => it.data>=i && it.data<=f).forEach(it => it.tipo=='ganho'?g+=it.valor:s+=it.valor);
-        document.getElementById('resumo').innerHTML = `Ganhos: R$ ${g.toFixed(2)}<br>Gastos: R$ ${s.toFixed(2)}<hr>Saldo: R$ ${(g-s).toFixed(2)}`;
+        const mesSel = document.getElementById('rel-mes').value || dataRef.toISOString().substring(0, 7);
+        const filtrados = db.filter(it => it.data.startsWith(mesSel));
+        let g=0, s=0, cats = {};
+        
+        filtrados.forEach(it => {
+            if(it.tipo === 'ganho') g += it.valor;
+            else {
+                s += it.valor;
+                cats[it.cat] = (cats[it.cat] || 0) + it.valor;
+            }
+        });
+
+        document.getElementById('resumo-total').innerHTML = `Ganhos: <span style="color:green">R$ ${g.toFixed(2)}</span><br>Gastos: <span style="color:red">R$ ${s.toFixed(2)}</span><hr>Saldo: <strong>R$ ${(g-s).toFixed(2)}</strong>`;
+        
+        const catLista = document.getElementById('cat-lista');
+        catLista.innerHTML = "";
+        for(let c in cats) {
+            const perc = (cats[c] / s * 100).toFixed(0);
+            catLista.innerHTML += `<div class="cat-row"><span>${c}</span><span>R$ ${cats[c].toFixed(2)} (${perc}%)</span></div>
+            <div class="barra-bg"><div class="barra-fg" style="width:${perc}%"></div></div>`;
+        }
     }
 
     window.onload = () => { 
         document.getElementById('data').valueAsDate = new Date(); 
-        listar(); 
+        document.getElementById('rel-mes').value = dataRef.toISOString().substring(0, 7);
+        listar(); render();
     };
 </script>
 </body>
