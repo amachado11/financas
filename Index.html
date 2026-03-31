@@ -3,43 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite</title>
+    <title>Finanças Master Elite v23</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; color: #1c1c1e; }
         .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
         .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
         .aba { display: none; }
         .aba.ativa { display: block; }
-        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        /* CALENDÁRIO MASTER */
-        .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .resumo-topo-cal { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 12px; border: 1px solid #eee; }
-        .resumo-item { text-align: center; }
-        .resumo-item b { display: block; font-size: 14px; }
-        .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 5px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
-        .dia { background: white; min-height: 110px; padding: 5px; display: flex; flex-direction: column; position: relative; }
-        .dia.hoje { background: #eef7ff; border: 2px solid var(--primaria); z-index: 1; }
-        .fds { background: #f9f9f9; }
-        
-        .dia-n { font-weight: bold; color: #444; font-size: 12px; margin-bottom: 4px; }
-        .v-dia { font-size: 9px; line-height: 1.2; font-weight: 500; }
-        .saldo-d { margin-top: auto; font-weight: 900; text-align: right; font-size: 12px; border-top: 1px solid #eee; padding-top: 3px; }
+        /* SELETOR DE MÊS ESTILIZADO */
+        .filtro-mes { background: #e9e9eb; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; margin-bottom: 10px; width: auto; font-size: 14px; }
 
-        /* NAVEGAÇÃO */
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 80px; border-top: 2px solid #eee; z-index: 9999; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: #888; }
+        /* CALENDÁRIO LIMPO */
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e5e5ea; border-radius: 12px; overflow: hidden; border: 1px solid #e5e5ea; }
+        .dia { background: white; min-height: 115px; padding: 6px; display: flex; flex-direction: column; position: relative; }
+        .dia.hoje { background: #f2f9ff; border: 2px solid var(--primaria); z-index: 1; }
+        .fds { background: #fcfcfc; }
+        .dia-n { font-weight: 700; color: #8e8e93; font-size: 12px; margin-bottom: 5px; }
+        .v-dia { font-size: 10px; line-height: 1.3; font-weight: 600; min-height: 13px; }
+        .saldo-d { margin-top: auto; font-weight: 800; text-align: right; font-size: 12px; border-top: 1px solid #f2f2f7; padding-top: 4px; }
+
+        /* NAV */
+        .nav { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); display: flex; height: 85px; border-top: 1px solid #d1d1d6; z-index: 9999; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #8e8e93; gap: 4px; }
         .nav-btn.ativo { color: var(--primaria); font-weight: bold; }
         
-        input, select, button { width: 100%; padding: 14px; margin: 5px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; }
-        .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; text-transform: uppercase; }
-        .btn-acao { width: 35px; height: 35px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #f2f2f7; }
+        /* FORMULÁRIO */
+        input, select, button { width: 100%; padding: 14px; margin: 6px 0; border-radius: 12px; border: 1px solid #d1d1d6; font-size: 16px; transition: 0.2s; }
+        input:focus { border-color: var(--primaria); outline: none; }
+        .btn-principal { background: var(--primaria); color: white; border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+        
+        /* LISTA */
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f2f2f7; }
+        .tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; }
+        .btn-acao { width: 38px; height: 38px; border-radius: 10px; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #f2f2f7; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -51,35 +51,44 @@
         <div class="card">
             <input type="hidden" id="edit-id">
             <input type="date" id="data">
-            <input type="text" id="desc" placeholder="Descrição">
+            <input type="text" id="desc" placeholder="O que você comprou?">
             <input type="number" id="valor" placeholder="R$ 0,00" inputmode="decimal">
-            <select id="cat">
-                <option value="Alimentação">🍕 Alimentação</option>
-                <option value="Transporte">🚗 Transporte</option>
-                <option value="Lazer">🎡 Lazer</option>
-                <option value="Contas">🏠 Contas Fixas</option>
-                <option value="Saúde">🏥 Saúde</option>
-                <option value="Mercado">🛒 Mercado</option>
-                <option value="Salário">💰 Salário/Renda</option>
-                <option value="Outros">⚙️ Outros</option>
-            </select>
-            <select id="tipo"><option value="gasto">Despesa (-)</option><option value="ganho">Ganho (+)</option></select>
+            <div style="display: flex; gap: 10px;">
+                <select id="cat" style="flex: 2;">
+                    <option value="Alimentação">🍕 Alimentação</option>
+                    <option value="Transporte">🚗 Transporte</option>
+                    <option value="Lazer">🎡 Lazer</option>
+                    <option value="Contas">🏠 Contas Fixas</option>
+                    <option value="Saúde">🏥 Saúde</option>
+                    <option value="Mercado">🛒 Mercado</option>
+                    <option value="Salário">💰 Salário/Renda</option>
+                    <option value="Outros">⚙️ Outros</option>
+                </select>
+                <select id="tipo" style="flex: 1;"><option value="gasto">(-) Saiu</option><option value="ganho">(+) Entrou</option></select>
+            </div>
             <button id="btn-salvar" class="btn-principal" onclick="salvar()">Salvar Lançamento</button>
-            <button id="btn-cancelar" style="display:none; background:#888; color:white;" onclick="cancelarEdicao()">Cancelar</button>
+            <button id="btn-cancelar" style="display:none; background:#8e8e93; color:white;" onclick="cancelarEdicao()">Cancelar</button>
         </div>
-        <div id="lista" class="card"></div>
+        
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                <strong style="font-size:18px">Histórico</strong>
+                <input type="month" id="filtro-historico" class="filtro-mes" onchange="listar()">
+            </div>
+            <div id="lista"></div>
+        </div>
     </div>
 
     <div id="aba-cal" class="aba">
         <div class="seletor-mes-container">
-            <button onclick="mudarMes(-1)" style="width:50px; border:none; background:none; font-size:20px">❮</button>
-            <span id="mes-label" style="font-size:18px; font-weight:bold"></span>
-            <button onclick="mudarMes(1)" style="width:50px; border:none; background:none; font-size:20px">❯</button>
+            <button onclick="mudarMes(-1)" style="width:40px; border:none; background:none; font-size:24px">‹</button>
+            <span id="mes-label" style="font-size:20px; font-weight:800"></span>
+            <button onclick="mudarMes(1)" style="width:40px; border:none; background:none; font-size:24px">›</button>
         </div>
         <div class="resumo-topo-cal">
             <div class="resumo-item">Ganhos<b style="color:var(--ganho)" id="res-ganho">R$ 0</b></div>
             <div class="resumo-item">Gastos<b style="color:var(--gasto)" id="res-gasto">R$ 0</b></div>
-            <div class="resumo-item">Saldo<b id="res-saldo">R$ 0</b></div>
+            <div class="resumo-item">Saldo Mês<b id="res-saldo">R$ 0</b></div>
         </div>
         <div class="dias-semana-topo">
             <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
@@ -89,7 +98,10 @@
 
     <div id="aba-rel" class="aba">
         <div class="card">
-            <input type="month" id="rel-mes" onchange="gerarRel()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <strong style="font-size:18px">Análise Mensal</strong>
+                <input type="month" id="rel-mes" class="filtro-mes" onchange="gerarRel()">
+            </div>
             <div id="resumo-total"></div>
         </div>
         <div id="resumo-categorias" class="card"><div id="cat-lista"></div></div>
@@ -97,9 +109,9 @@
 </div>
 
 <div class="nav">
-    <button class="nav-btn ativo" onclick="ir('add', this)">➕ Lançar</button>
-    <button class="nav-btn" onclick="ir('cal', this)">📅 Calendário</button>
-    <button class="nav-btn" onclick="ir('rel', this)">📊 Gráficos</button>
+    <button class="nav-btn ativo" onclick="ir('add', this)"><span>➕</span>Lançar</button>
+    <button class="nav-btn" onclick="ir('cal', this)"><span>📅</span>Calendário</button>
+    <button class="nav-btn" onclick="ir('rel', this)"><span>📊</span>Análise</button>
 </div>
 
 <script>
@@ -122,11 +134,11 @@
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
         const editId = document.getElementById('edit-id').value;
-        if(!d || isNaN(v)) return alert("Preencha os campos!");
-        const item = { id: editId ? parseInt(editId) : Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
+        if(!d || isNaN(v)) return alert("Valor inválido!");
+        const item = { id: editId ? parseInt(editId) : Date.now(), data: d, desc: document.getElementById('desc').value || 'Sem nome', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
         if(editId) db = db.map(i => i.id === parseInt(editId) ? item : i); else db.push(item);
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        cancelarEdicao(); listar(); alert("Salvo!");
+        cancelarEdicao(); listar();
     }
 
     function prepararEdicao(id) {
@@ -145,13 +157,16 @@
         document.getElementById('btn-cancelar').style.display = "none";
     }
 
-    function deletar(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id !== id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); } }
+    function deletar(id) { if(confirm("Deseja excluir?")) { db = db.filter(i => i.id !== id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); } }
 
     function listar() {
-        const l = document.getElementById('lista'), m = dataRef.toISOString().substring(0, 7);
-        l.innerHTML = "<strong>Histórico</strong>";
-        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
-            l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br>${i.desc}<br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><div class="acoes"><button onclick="prepararEdicao(${i.id})" class="btn-acao">✏️</button><button onclick="deletar(${i.id})" class="btn-acao">🗑️</button></div></div>`;
+        const l = document.getElementById('lista');
+        const mesFiltro = document.getElementById('filtro-historico').value;
+        l.innerHTML = "";
+        const filtrados = db.filter(i => i.data.startsWith(mesFiltro)).reverse();
+        if(filtrados.length === 0) l.innerHTML = "<p style='color:#8e8e93; text-align:center'>Nenhum registro este mês.</p>";
+        filtrados.forEach(i => {
+            l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br><b>${i.desc}</b><br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><div style="display:flex"><button onclick="prepararEdicao(${i.id})" class="btn-acao">✏️</button><button onclick="deletar(${i.id})" class="btn-acao">🗑️</button></div></div>`;
         });
     }
 
@@ -164,10 +179,11 @@
         const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         
         let saldoAcumulado = 0, ganhoMes = 0, gastoMes = 0;
-        db.forEach(i => {
+        db.sort((a,b) => a.data.localeCompare(b.data)).forEach(i => {
             const dataItem = new Date(i.data + "T00:00:00");
-            if(dataItem < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo=='ganho' ? i.valor : -i.valor);
-            else if(i.data.startsWith(dataRef.toISOString().substring(0,7))) {
+            if(dataItem < new Date(ano, mes, 1)) {
+                saldoAcumulado += (i.tipo=='ganho' ? i.valor : -i.valor);
+            } else if(i.data.startsWith(dataRef.toISOString().substring(0,7))) {
                 if(i.tipo == 'ganho') ganhoMes += i.valor; else gastoMes += i.valor;
             }
         });
@@ -177,7 +193,7 @@
         document.getElementById('res-saldo').innerText = "R$ " + (ganhoMes - gastoMes).toFixed(0);
         document.getElementById('res-saldo').style.color = (ganhoMes - gastoMes) >= 0 ? 'var(--ganho)' : 'var(--gasto)';
 
-        for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#eee"></div>`;
+        for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
         
         for(let d=1; d<=fim; d++) {
             const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -192,28 +208,34 @@
             g.innerHTML += `
             <div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''} ${eFimSemana?'fds':''}">
                 <span class="dia-n">${d}</span>
-                <div class="v-dia" style="color:var(--ganho)">R$ ${ganhoDia.toFixed(0)}</div>
-                <div class="v-dia" style="color:var(--gasto)">R$ ${gastoDia.toFixed(0)}</div>
-                <div class="saldo-d" style="color:${saldoAcumulado>=0?'green':'red'}">R$ ${saldoAcumulado.toFixed(0)}</div>
+                <div class="v-dia" style="color:var(--ganho)">${ganhoDia > 0 ? 'R$ '+ganhoDia.toFixed(0) : ''}</div>
+                <div class="v-dia" style="color:var(--gasto)">${gastoDia > 0 ? 'R$ '+gastoDia.toFixed(0) : ''}</div>
+                <div class="saldo-d" style="color:${saldoAcumulado>=0?'#34C759':'#FF3B30'}">R$ ${saldoAcumulado.toFixed(0)}</div>
             </div>`;
         }
     }
 
     function gerarRel() {
-        const mesSel = document.getElementById('rel-mes').value || dataRef.toISOString().substring(0, 7);
+        const mesSel = document.getElementById('rel-mes').value;
         const filtrados = db.filter(it => it.data.startsWith(mesSel));
         let g=0, s=0, cats = {};
         filtrados.forEach(it => { if(it.tipo === 'ganho') g += it.valor; else { s += it.valor; cats[it.cat] = (cats[it.cat] || 0) + it.valor; } });
-        const percGasta = g > 0 ? Math.min((s/g)*100, 100) : 0;
+        const economia = g > 0 ? (((g-s)/g)*100) : 0;
+        
         document.getElementById('resumo-total').innerHTML = `
-            <div style="margin-bottom:15px">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px"><span>Consumo da Renda</span><span>${percGasta.toFixed(1)}%</span></div>
-                <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden"><div style="background:${percGasta>90?'red':'var(--primaria)'}; height:100%; width:${percGasta}%"></div></div>
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 13px; color: #666;">Economia Real do Mês</span><br>
+                <strong style="font-size: 28px; color: ${economia>=0?'var(--ganho)':'var(--gasto)'}">${economia.toFixed(1)}%</strong>
             </div>
-            Ganhos: <span style="color:green">R$ ${g.toFixed(2)}</span><br>Gastos: <span style="color:red">R$ ${s.toFixed(2)}</span><hr>Saldo: <strong>R$ ${(g-s).toFixed(2)}</strong>`;
+            <div style="display:flex; justify-content: space-around; margin-bottom: 10px;">
+                <div style="text-align:center"><small>Ganhos</small><br><b style="color:green">R$ ${g.toFixed(2)}</b></div>
+                <div style="text-align:center"><small>Gastos</small><br><b style="color:red">R$ ${s.toFixed(2)}</b></div>
+                <div style="text-align:center"><small>Saldo</small><br><b>R$ ${(g-s).toFixed(2)}</b></div>
+            </div>`;
+            
         const catLista = document.getElementById('cat-lista'); catLista.innerHTML = "<strong>Gastos por Categoria</strong><br><br>";
         Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, val]) => {
-            const p = (val/s*100).toFixed(0);
+            const p = s > 0 ? (val/s*100).toFixed(0) : 0;
             catLista.innerHTML += `<div style="margin-bottom:12px">
                 <div style="display:flex; justify-content:space-between; font-size:14px"><span>${c}</span><span>R$ ${val.toFixed(2)} (${p}%)</span></div>
                 <div style="background:#eee; height:8px; border-radius:4px; margin-top:4px"><div style="background:${coresCat[c]||'#ccc'}; height:8px; border-radius:4px; width:${p}%"></div></div>
@@ -221,7 +243,14 @@
         });
     }
 
-    window.onload = () => { document.getElementById('data').valueAsDate = new Date(); document.getElementById('rel-mes').value = dataRef.toISOString().substring(0,7); listar(); render(); };
+    window.onload = () => { 
+        const hoje = new Date().toISOString().substring(0, 10);
+        const mesAtual = hoje.substring(0, 7);
+        document.getElementById('data').value = hoje;
+        document.getElementById('filtro-historico').value = mesAtual;
+        document.getElementById('rel-mes').value = mesAtual;
+        listar(); render(); 
+    };
 </script>
 </body>
 </html>
