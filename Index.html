@@ -31,8 +31,9 @@
         
         input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #d1d1d6; font-size: 16px; margin: 4px 0; }
         .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
-        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
+        .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
     </style>
 </head>
 <body>
@@ -57,7 +58,7 @@
                 </select>
                 <select id="tipo" style="flex:1.2"><option value="gasto">(-) Saiu</option><option value="ganho">(+) Entrou</option></select>
             </div>
-            <button class="btn-principal" onclick="salvar()">Salvar Lançamento</button>
+            <button class="btn-principal" id="btn-salvar" onclick="salvar()">Salvar Lançamento</button>
         </div>
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
@@ -115,17 +116,61 @@
 
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
+        const editId = document.getElementById('edit-id').value;
         if(!d || isNaN(v)) return alert("Dados inválidos!");
-        db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value });
+
+        if (editId) {
+            const index = db.findIndex(i => i.id == editId);
+            db[index] = { ...db[index], data: d, desc: document.getElementById('desc').value, valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
+            document.getElementById('edit-id').value = "";
+            document.getElementById('btn-salvar').innerText = "Salvar Lançamento";
+            document.getElementById('btn-salvar').style.background = "var(--primaria)";
+        } else {
+            db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value });
+        }
+
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        document.getElementById('valor').value = ""; listar();
+        document.getElementById('valor').value = ""; 
+        document.getElementById('desc').value = "";
+        listar();
+    }
+
+    function editar(id) {
+        const item = db.find(i => i.id == id);
+        document.getElementById('data').value = item.data;
+        document.getElementById('desc').value = item.desc;
+        document.getElementById('valor').value = item.valor;
+        document.getElementById('cat').value = item.cat;
+        document.getElementById('tipo').value = item.tipo;
+        document.getElementById('edit-id').value = id;
+        document.getElementById('btn-salvar').innerText = "Atualizar Lançamento";
+        document.getElementById('btn-salvar').style.background = "var(--edicao)";
+        window.scrollTo(0,0);
+    }
+
+    function excluir(id) {
+        if(confirm("Deseja apagar este lançamento?")) {
+            db = db.filter(i => i.id != id);
+            localStorage.setItem('financas_v_final', JSON.stringify(db));
+            listar();
+        }
     }
 
     function listar() {
         const l = document.getElementById('lista'), m = document.getElementById('filtro-historico').value;
         l.innerHTML = "";
-        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
-            l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br><b>${i.desc}</b><br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div></div>`;
+        db.filter(i => i.data.startsWith(m)).sort((a,b) => b.data.localeCompare(a.data)).forEach(i => {
+            l.innerHTML += `<div class="item">
+                <div>
+                    <span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br>
+                    <b>${i.desc}</b><br>
+                    <small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small>
+                </div>
+                <div>
+                    <button class="btn-acao" onclick="editar(${i.id})">✎</button>
+                    <button class="btn-acao" onclick="excluir(${i.id})">🗑️</button>
+                </div>
+            </div>`;
         });
     }
 
@@ -147,8 +192,8 @@
             let ganhoD = 0, gastoD = 0;
             db.filter(x => x.data === dataI).forEach(i => {
                 if(i.tipo == 'ganho') ganhoD += i.valor; else gastoD += i.valor;
-                saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor);
             });
+            saldoAcumulado += (ganhoD - gastoD);
             g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''}">
                 <span class="dia-n">${d}</span>
                 <div class="v-dia" style="color:var(--ganho)">${ganhoD>0?'R$ '+ganhoD.toFixed(0):''}</div>
@@ -163,8 +208,9 @@
         let g=0, s=0, cats = {};
         filtrados.forEach(it => { if(it.tipo==='ganho') g+=it.valor; else { s+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
         
-        const hoje = new Date(), diaAtual = hoje.getDate(), ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
+        const hoje = new Date(), diaAtual = hoje.getDate();
         const media = s / diaAtual;
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
         const projecao = media * ultimoDia;
 
         document.getElementById('resumo-total').innerHTML = `
