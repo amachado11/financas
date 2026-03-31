@@ -14,10 +14,6 @@
         .aba.ativa { display: block; }
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        /* META DIÁRIA DESTAQUE */
-        .meta-container { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-size: 14px; color: #856404; }
-        .meta-valor { font-size: 20px; font-weight: 900; display: block; color: #d39e00; }
-
         /* CALENDÁRIO */
         .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #8e8e93; margin-bottom: 5px; }
@@ -73,9 +69,6 @@
     </div>
 
     <div id="aba-cal" class="aba">
-        <div class="meta-container" id="meta-container">
-            Meta Diária para pagar o mês: <strong class="meta-valor" id="meta-valor">R$ 0</strong>
-        </div>
         <div class="seletor-mes-container">
             <button onclick="mudarMes(-1)" style="border:none; background:none; font-size:24px">❮</button>
             <span id="mes-label" style="font-size:18px; font-weight:800"></span>
@@ -143,15 +136,6 @@
         g.innerHTML = "";
         const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         
-        let totalGastosMes = 0;
-        db.filter(i => i.data.startsWith(dataRef.toISOString().substring(0,7)) && i.tipo == 'gasto').forEach(i => totalGastosMes += i.valor);
-        
-        // Cálculo da Meta Diária
-        const hoje = new Date();
-        const diasRestantes = (hoje.getMonth() === mes && hoje.getFullYear() === ano) ? (fim - hoje.getDate() + 1) : fim;
-        const metaD = totalGastosMes > 0 ? (totalGastosMes / diasRestantes) : 0;
-        document.getElementById('meta-valor').innerText = "R$ " + metaD.toFixed(2);
-
         let saldoAcumulado = 0;
         db.sort((a,b)=>a.data.localeCompare(b.data)).forEach(i => {
             if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor);
@@ -165,7 +149,7 @@
                 if(i.tipo == 'ganho') ganhoD += i.valor; else gastoD += i.valor;
                 saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor);
             });
-            g.innerHTML += `<div class="dia ${dataI==hoje.toISOString().substring(0,10)?'hoje':''}">
+            g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''}">
                 <span class="dia-n">${d}</span>
                 <div class="v-dia" style="color:var(--ganho)">${ganhoD>0?'R$ '+ganhoD.toFixed(0):''}</div>
                 <div class="v-dia" style="color:var(--gasto)">${gastoD>0?'R$ '+gastoD.toFixed(0):''}</div>
@@ -179,7 +163,6 @@
         let g=0, s=0, cats = {};
         filtrados.forEach(it => { if(it.tipo==='ganho') g+=it.valor; else { s+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
         
-        // Média e Projeção
         const hoje = new Date(), diaAtual = hoje.getDate(), ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
         const media = s / diaAtual;
         const projecao = media * ultimoDia;
