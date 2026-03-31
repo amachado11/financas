@@ -14,17 +14,22 @@
         .aba.ativa { display: block; }
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* CALENDÁRIO */
+        /* CALENDÁRIO OTIMIZADO */
         .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .resumo-topo-cal { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 12px; border: 1px solid #eee; }
         .resumo-item { text-align: center; }
         .resumo-item b { display: block; font-size: 14px; }
         .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 5px; }
+        
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
-        .dia { background: white; min-height: 80px; padding: 5px; display: flex; flex-direction: column; font-size: 11px; }
-        .dia.hoje { background: #eef7ff; border: 1px solid var(--primaria); }
+        .dia { background: white; min-height: 100px; padding: 4px; display: flex; flex-direction: column; font-size: 10px; position: relative; }
+        .dia.hoje { background: #eef7ff; border: 1.5px solid var(--primaria); z-index: 1; }
         .fds { background: #f9f9f9; }
-        .saldo-d { margin-top: auto; font-weight: bold; text-align: right; font-size: 10px; }
+        
+        /* VALORES DENTRO DO DIA */
+        .dia-n { font-weight: bold; color: #444; font-size: 11px; margin-bottom: 2px; }
+        .v-dia { font-size: 8px; line-height: 1; margin-bottom: 1px; }
+        .saldo-d { margin-top: auto; font-weight: 900; text-align: right; font-size: 11px; border-top: 1px solid #eee; padding-top: 2px; }
 
         /* NAVEGAÇÃO */
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 80px; border-top: 2px solid #eee; z-index: 9999; padding-bottom: env(safe-area-inset-bottom); }
@@ -88,9 +93,7 @@
             <input type="month" id="rel-mes" onchange="gerarRel()">
             <div id="resumo-total"></div>
         </div>
-        <div id="resumo-categorias" class="card">
-            <div id="cat-lista"></div>
-        </div>
+        <div id="resumo-categorias" class="card"><div id="cat-lista"></div></div>
     </div>
 </div>
 
@@ -103,12 +106,7 @@
 <script>
     let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
     let dataRef = new Date();
-
-    const coresCat = {
-        'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Lazer': '#AF52DE', 
-        'Contas': '#FF3B30', 'Saúde': '#FF2D55', 'Mercado': '#FFCC00', 
-        'Salário': '#34C759', 'Outros': '#8E8E93'
-    };
+    const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Lazer': '#AF52DE', 'Contas': '#FF3B30', 'Saúde': '#FF2D55', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
 
     function ir(aba, btn) {
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
@@ -125,34 +123,26 @@
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
         const editId = document.getElementById('edit-id').value;
-        if(!d || isNaN(v)) return alert("Preencha os campos!");
+        if(!d || isNaN(v)) return alert("Preencha!");
         const item = { id: editId ? parseInt(editId) : Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
-        if(editId) db = db.map(i => i.id === parseInt(editId) ? item : i);
-        else db.push(item);
+        if(editId) db = db.map(i => i.id === parseInt(editId) ? item : i); else db.push(item);
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        cancelarEdicao(); listar(); alert("Salvo!");
+        cancelarEdicao(); listar();
     }
 
     function prepararEdicao(id) {
         const i = db.find(x => x.id === id);
-        document.getElementById('edit-id').value = i.id;
-        document.getElementById('data').value = i.data;
-        document.getElementById('desc').value = i.desc;
-        document.getElementById('valor').value = i.valor;
-        document.getElementById('cat').value = i.cat;
-        document.getElementById('tipo').value = i.tipo;
-        document.getElementById('btn-salvar').innerText = "Atualizar";
-        document.getElementById('btn-salvar').style.background = "var(--edicao)";
-        document.getElementById('btn-cancelar').style.display = "block";
-        window.scrollTo(0,0);
+        document.getElementById('edit-id').value = i.id; document.getElementById('data').value = i.data;
+        document.getElementById('desc').value = i.desc; document.getElementById('valor').value = i.valor;
+        document.getElementById('cat').value = i.cat; document.getElementById('tipo').value = i.tipo;
+        document.getElementById('btn-salvar').innerText = "Atualizar"; document.getElementById('btn-salvar').style.background = "var(--edicao)";
+        document.getElementById('btn-cancelar').style.display = "block"; window.scrollTo(0,0);
     }
 
     function cancelarEdicao() {
-        document.getElementById('edit-id').value = "";
-        document.getElementById('data').valueAsDate = new Date();
+        document.getElementById('edit-id').value = ""; document.getElementById('data').valueAsDate = new Date();
         document.getElementById('desc').value = ""; document.getElementById('valor').value = "";
-        document.getElementById('btn-salvar').innerText = "Salvar Lançamento";
-        document.getElementById('btn-salvar').style.background = "var(--primaria)";
+        document.getElementById('btn-salvar').innerText = "Salvar"; document.getElementById('btn-salvar').style.background = "var(--primaria)";
         document.getElementById('btn-cancelar').style.display = "none";
     }
 
@@ -173,8 +163,8 @@
         label.innerText = nomes[mes] + " " + ano;
         g.innerHTML = "";
         const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
-        let saldoAcumulado = 0, ganhoMes = 0, gastoMes = 0;
         
+        let saldoAcumulado = 0, ganhoMes = 0, gastoMes = 0;
         db.forEach(i => {
             const dataItem = new Date(i.data + "T00:00:00");
             if(dataItem < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo=='ganho' ? i.valor : -i.valor);
@@ -189,12 +179,24 @@
         document.getElementById('res-saldo').style.color = (ganhoMes - gastoMes) >= 0 ? 'var(--ganho)' : 'var(--gasto)';
 
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#eee"></div>`;
+        
         for(let d=1; d<=fim; d++) {
             const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const eFimSemana = ([0,6].includes(new Date(ano, mes, d).getDay()));
-            db.filter(x => x.data === dataI).forEach(i => saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor));
-            g.innerHTML += `<div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''} ${eFimSemana?'fds':''}">
-                <b>${d}</b><div class="saldo-d" style="color:${saldoAcumulado>=0?'green':'red'}">${saldoAcumulado.toFixed(0)}</div>
+            
+            // Soma do dia específico
+            let ganhoDia = 0, gastoDia = 0;
+            db.filter(x => x.data === dataI).forEach(i => {
+                if(i.tipo == 'ganho') ganhoDia += i.valor; else gastoDia += i.valor;
+                saldoAcumulado += (i.tipo=='ganho' ? i.valor : -i.valor);
+            });
+            
+            g.innerHTML += `
+            <div class="dia ${dataI==new Date().toISOString().substring(0,10)?'hoje':''} ${eFimSemana?'fds':''}">
+                <span class="dia-n">${d}</span>
+                <div class="v-dia" style="color:var(--ganho)">${ganhoDia > 0 ? '+'+ganhoDia.toFixed(0) : ''}</div>
+                <div class="v-dia" style="color:var(--gasto)">${gastoDia > 0 ? '-'+gastoDia.toFixed(0) : ''}</div>
+                <div class="saldo-d" style="color:${saldoAcumulado>=0?'green':'red'}">${saldoAcumulado.toFixed(0)}</div>
             </div>`;
         }
     }
@@ -204,7 +206,6 @@
         const filtrados = db.filter(it => it.data.startsWith(mesSel));
         let g=0, s=0, cats = {};
         filtrados.forEach(it => { if(it.tipo === 'ganho') g += it.valor; else { s += it.valor; cats[it.cat] = (cats[it.cat] || 0) + it.valor; } });
-
         const percGasta = g > 0 ? Math.min((s/g)*100, 100) : 0;
         document.getElementById('resumo-total').innerHTML = `
             <div style="margin-bottom:15px">
@@ -212,7 +213,6 @@
                 <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden"><div style="background:${percGasta>90?'red':'var(--primaria)'}; height:100%; width:${percGasta}%"></div></div>
             </div>
             Ganhos: <span style="color:green">R$ ${g.toFixed(2)}</span><br>Gastos: <span style="color:red">R$ ${s.toFixed(2)}</span><hr>Saldo: <strong>R$ ${(g-s).toFixed(2)}</strong>`;
-
         const catLista = document.getElementById('cat-lista'); catLista.innerHTML = "<strong>Gastos por Categoria</strong><br><br>";
         Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, val]) => {
             const p = (val/s*100).toFixed(0);
