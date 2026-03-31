@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite v25</title>
+    <title>Finanças Master Elite v26</title>
     <style>
-        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; }
+        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; color: #1c1c1e; }
-        .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
-        .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); color: #1c1c1e; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; }
+        .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
         .aba { display: none; }
         .aba.ativa { display: block; }
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        /* META DIÁRIA DESTAQUE */
-        .meta-container { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-size: 14px; color: #856404; }
-        .meta-valor { font-size: 20px; font-weight: 900; display: block; color: #d39e00; }
+        /* META DIÁRIA */
+        .meta-topo { background: #fff3cd; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 10px; border: 1px solid #ffeeba; }
+        .meta-topo b { display: block; font-size: 22px; color: #856404; }
 
-        /* CALENDÁRIO */
-        .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #8e8e93; margin-bottom: 5px; }
+        /* CALENDÁRIO COM NEGATIVOS */
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #d1d1d6; border-radius: 12px; overflow: hidden; }
-        .dia { background: white; min-height: 105px; padding: 5px; display: flex; flex-direction: column; }
+        .dia { background: white; min-height: 95px; padding: 4px; display: flex; flex-direction: column; position: relative; }
         .dia.hoje { background: #f2f9ff; box-shadow: inset 0 0 0 2px var(--primaria); }
-        .dia-n { font-weight: 700; color: #8e8e93; font-size: 11px; }
-        .v-dia { font-size: 9px; line-height: 1.1; font-weight: 600; margin-top: 2px; }
-        .saldo-d { margin-top: auto; font-weight: 800; text-align: right; font-size: 11px; padding-top: 3px; border-top: 1px solid #f2f2f7; }
+        .dia-n { font-weight: bold; color: #8e8e93; font-size: 11px; }
+        .v-dia { font-size: 9px; font-weight: 600; margin-top: 1px; }
+        .saldo-d { margin-top: auto; font-weight: 800; text-align: right; font-size: 10px; padding-top: 2px; border-top: 1px solid #f2f2f7; }
 
         /* NAV */
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #d1d1d6; }
@@ -35,8 +33,6 @@
         
         input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #d1d1d6; font-size: 16px; margin: 4px 0; }
         .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
-        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
-        .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -46,54 +42,44 @@
 <div class="conteudo">
     <div id="aba-add" class="aba ativa">
         <div class="card">
-            <input type="hidden" id="edit-id">
             <input type="date" id="data">
-            <input type="text" id="desc" placeholder="O que foi?">
+            <input type="text" id="desc" placeholder="Ex: Ganho Uber Manhã">
             <input type="number" id="valor" placeholder="R$ 0,00" inputmode="decimal">
             <div style="display:flex; gap:8px">
                 <select id="cat" style="flex:2">
                     <option value="Salário">💰 Ganho Uber/99</option>
+                    <option value="Transporte">🚗 Combustível</option>
+                    <option value="Contas">🏠 Conta Fixa</option>
                     <option value="Alimentação">🍕 Alimentação</option>
-                    <option value="Transporte">🚗 Combustível/Manut.</option>
-                    <option value="Contas">🏠 Contas Fixas</option>
-                    <option value="Mercado">🛒 Mercado</option>
                     <option value="Outros">⚙️ Outros</option>
                 </select>
-                <select id="tipo" style="flex:1.2"><option value="gasto">(-) Saiu</option><option value="ganho">(+) Entrou</option></select>
+                <select id="tipo" style="flex:1"><option value="gasto">Saiu</option><option value="ganho">Entrou</option></select>
             </div>
-            <button class="btn-principal" onclick="salvar()">Salvar Lançamento</button>
+            <button class="btn-principal" onclick="salvar()">Salvar</button>
         </div>
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                <strong>Histórico</strong>
-                <input type="month" id="filtro-historico" style="width: auto; padding: 5px;" onchange="listar()">
-            </div>
-            <div id="lista"></div>
-        </div>
+        <div id="lista" class="card"></div>
     </div>
 
     <div id="aba-cal" class="aba">
-        <div class="meta-container" id="meta-container">
-            Meta Diária para pagar o mês: <strong class="meta-valor" id="meta-valor">R$ 0</strong>
+        <div class="meta-topo">
+            Faturamento necessário hoje:
+            <b id="meta-dia-valor">R$ 0,00</b>
         </div>
-        <div class="seletor-mes-container">
-            <button onclick="mudarMes(-1)" style="border:none; background:none; font-size:24px">❮</button>
-            <span id="mes-label" style="font-size:18px; font-weight:800"></span>
-            <button onclick="mudarMes(1)" style="border:none; background:none; font-size:24px">❯</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+            <button onclick="mudarMes(-1)" style="width:40px; border:none; background:none; font-size:20px">❮</button>
+            <strong id="mes-label"></strong>
+            <button onclick="mudarMes(1)" style="width:40px; border:none; background:none; font-size:20px">❯</button>
         </div>
-        <div class="dias-semana-topo">
-            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
-        </div>
-        <div class="grid" id="grid"></div>
+        <div id="grid" class="grid"></div>
     </div>
 
     <div id="aba-rel" class="aba">
         <div class="card">
-            <input type="month" id="rel-mes" onchange="gerarRel()">
-            <div id="resumo-total"></div>
+            <label>Sua meta de sobra no mês (Lucro):</label>
+            <input type="number" id="meta-lucro-input" value="3000" onchange="salvarMeta(this.value)">
+            <p style="font-size:12px; color:#666">O app usará isso para calcular quanto você precisa ganhar por dia.</p>
         </div>
-        <div class="card" id="card-projecao"></div>
-        <div id="resumo-categorias" class="card"><div id="cat-lista"></div></div>
+        <div id="rel-dados" class="card"></div>
     </div>
 </div>
 
@@ -105,109 +91,83 @@
 
 <script>
     let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
+    let metaLucro = parseFloat(localStorage.getItem('meta_lucro')) || 3000;
     let dataRef = new Date();
-    const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Lazer': '#AF52DE', 'Contas': '#FF3B30', 'Saúde': '#FF2D55', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
+
+    function salvarMeta(v) { metaLucro = parseFloat(v); localStorage.setItem('meta_lucro', v); render(); }
 
     function ir(aba, btn) {
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
         document.getElementById('aba-' + aba).classList.add('ativa');
         btn.classList.add('ativo');
-        if(aba === 'cal') render();
-        if(aba === 'add') listar();
-        if(aba === 'rel') gerarRel();
+        if(aba==='cal') render();
     }
-
-    function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
 
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
-        if(!d || isNaN(v)) return alert("Dados inválidos!");
-        db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value });
+        if(!d || isNaN(v)) return;
+        db.push({ id: Date.now(), data: d, desc: document.getElementById('desc').value, valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        document.getElementById('valor').value = ""; listar();
+        render(); listar();
     }
 
-    function listar() {
-        const l = document.getElementById('lista'), m = document.getElementById('filtro-historico').value;
-        l.innerHTML = "";
-        db.filter(i => i.data.startsWith(m)).reverse().forEach(i => {
-            l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br><b>${i.desc}</b><br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div></div>`;
-        });
-    }
+    function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
 
     function render() {
         const g = document.getElementById('grid'), label = document.getElementById('mes-label');
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
         g.innerHTML = "";
-        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         
-        let totalGastosMes = 0;
-        db.filter(i => i.data.startsWith(dataRef.toISOString().substring(0,7)) && i.tipo == 'gasto').forEach(i => totalGastosMes += i.valor);
-        
-        // Cálculo da Meta Diária
-        const hoje = new Date();
-        const diasRestantes = (hoje.getMonth() === mes && hoje.getFullYear() === ano) ? (fim - hoje.getDate() + 1) : fim;
-        const metaD = totalGastosMes > 0 ? (totalGastosMes / diasRestantes) : 0;
-        document.getElementById('meta-valor').innerText = "R$ " + metaD.toFixed(2);
+        const fim = new Date(ano, mes + 1, 0).getDate();
+        const inicio = new Date(ano, mes, 1).getDay();
+        const hojeIso = new Date().toISOString().split('T')[0];
+
+        // Cálculo da Meta Diária (Uber Style)
+        let totalGastoMes = 0;
+        db.filter(i => i.data.startsWith(dataRef.toISOString().substring(0,7)) && i.tipo === 'gasto').forEach(i => totalGastoMes += i.valor);
+        const diasNoMes = fim;
+        const diaAtual = new Date().getDate();
+        const diasRestantes = (diasNoMes - diaAtual) + 1;
+        const metaNecessaria = (totalGastoMes + metaLucro) / (diasRestantes > 0 ? diasRestantes : 1);
+        document.getElementById('meta-dia-valor').innerText = "R$ " + (metaNecessaria > 0 ? metaNecessaria : 0).toFixed(2);
 
         let saldoAcumulado = 0;
-        db.sort((a,b)=>a.data.localeCompare(b.data)).forEach(i => {
-            if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor);
-        });
+        // Saldo inicial (meses anteriores)
+        db.forEach(i => { if(new Date(i.data) < new Date(ano, mes, 1)) saldoAcumulado += (i.tipo==='ganho'?i.valor:-i.valor); });
 
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
+        
         for(let d=1; d<=fim; d++) {
             const dataI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let ganhoD = 0, gastoD = 0;
             db.filter(x => x.data === dataI).forEach(i => {
-                if(i.tipo == 'ganho') ganhoD += i.valor; else gastoD += i.valor;
-                saldoAcumulado += (i.tipo=='ganho'?i.valor:-i.valor);
+                if(i.tipo === 'ganho') ganhoD += i.valor; else gastoD += i.valor;
             });
-            g.innerHTML += `<div class="dia ${dataI==hoje.toISOString().substring(0,10)?'hoje':''}">
+            saldoAcumulado += (ganhoD - gastoD);
+
+            g.innerHTML += `<div class="dia ${dataI === hojeIso ? 'hoje' : ''}">
                 <span class="dia-n">${d}</span>
-                <div class="v-dia" style="color:var(--ganho)">${ganhoD>0?'R$ '+ganhoD.toFixed(0):''}</div>
-                <div class="v-dia" style="color:var(--gasto)">${gastoD>0?'R$ '+gastoD.toFixed(0):''}</div>
-                <div class="saldo-d" style="color:${saldoAcumulado>=0?'#34C759':'#FF3B30'}">R$ ${saldoAcumulado.toFixed(0)}</div>
+                <div class="v-dia" style="color:var(--ganho)">${ganhoD > 0 ? '+'+ganhoD.toFixed(0) : ''}</div>
+                <div class="v-dia" style="color:var(--gasto)">${gastoD > 0 ? '-'+gastoD.toFixed(0) : ''}</div>
+                <div class="saldo-d" style="color:${saldoAcumulado >= 0 ? 'var(--ganho)' : 'var(--gasto)'}">R$ ${saldoAcumulado.toFixed(0)}</div>
             </div>`;
         }
     }
 
-    function gerarRel() {
-        const m = document.getElementById('rel-mes').value, filtrados = db.filter(it => it.data.startsWith(m));
-        let g=0, s=0, cats = {};
-        filtrados.forEach(it => { if(it.tipo==='ganho') g+=it.valor; else { s+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
-        
-        // Média e Projeção
-        const hoje = new Date(), diaAtual = hoje.getDate(), ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
-        const media = s / diaAtual;
-        const projecao = media * ultimoDia;
-
-        document.getElementById('resumo-total').innerHTML = `
-            <div style="display:flex; justify-content:space-around; text-align:center">
-                <div>Ganhos<br><b style="color:green">R$ ${g.toFixed(2)}</b></div>
-                <div>Gastos<br><b style="color:red">R$ ${s.toFixed(2)}</b></div>
+    function listar() {
+        const l = document.getElementById('lista'); l.innerHTML = "<strong>Últimos Lançamentos</strong>";
+        db.slice(-5).reverse().forEach(i => {
+            l.innerHTML += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-bottom:1px solid #eee">
+                <span>${i.desc}</span><b style="color:${i.tipo==='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</b>
             </div>`;
-        
-        document.getElementById('card-projecao').innerHTML = `
-            <div style="font-size:13px; color:#666">Média de Gasto Diário: <b>R$ ${media.toFixed(2)}</b></div>
-            <div style="font-size:13px; color:#666; margin-top:5px">Projeção de Gasto no Mês: <b style="color:var(--gasto)">R$ ${projecao.toFixed(2)}</b></div>
-        `;
-
-        const cl = document.getElementById('cat-lista'); cl.innerHTML = "<strong>Gastos por Categoria</strong><br><br>";
-        Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, v]) => {
-            const p = s > 0 ? (v/s*100).toFixed(0) : 0;
-            cl.innerHTML += `<div style="margin-bottom:10px"><div style="display:flex; justify-content:space-between; font-size:13px"><span>${c}</span><span>R$ ${v.toFixed(2)} (${p}%)</span></div>
-                <div style="background:#eee; height:6px; border-radius:3px; margin-top:4px"><div style="background:${coresCat[c]}; width:${p}%; height:100%; border-radius:3px"></div></div></div>`;
         });
     }
 
     window.onload = () => { 
-        const mes = new Date().toISOString().substring(0,7);
         document.getElementById('data').valueAsDate = new Date();
-        document.getElementById('filtro-historico').value = mes;
-        document.getElementById('rel-mes').value = mes;
+        document.getElementById('meta-lucro-input').value = metaLucro;
         listar(); render(); 
     };
 </script>
