@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite v29</title>
+    <title>Finanças Master Elite v30</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --desejo: #AF52DE; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,7 +18,16 @@
         .aviso-recuperacao { background: #fff5f5; border: 2px solid #feb2b2; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; color: #c53030; display: none; text-align: center; line-height: 1.4; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { border-color: #feb2b2; } 50% { border-color: #fc8181; } 100% { border-color: #feb2b2; } }
 
-        /* TABELA E GRID */
+        /* ANALISE / RELATORIO */
+        .grid-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .mini-card { background: white; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .mini-card span { font-size: 11px; color: #8e8e93; display: block; margin-bottom: 4px; }
+        .mini-card b { font-size: 15px; }
+        .progresso-container { background: #e5e5ea; height: 12px; border-radius: 6px; margin: 10px 0; overflow: hidden; }
+        .progresso-barra { height: 100%; background: var(--ganho); transition: width 0.3s; }
+        .meta-texto { font-size: 12px; color: #666; display: flex; justify-content: space-between; }
+
+        /* CALENDÁRIO */
         .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #d1d1d6; border-radius: 12px; overflow: hidden; }
         .dia { background: white; min-height: 105px; padding: 5px; display: flex; flex-direction: column; }
@@ -36,8 +45,6 @@
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
-        
-        /* ESTILO ESPECÍFICO DESEJOS */
         .btn-comprar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; margin-left: 5px; }
     </style>
 </head>
@@ -81,7 +88,7 @@
             <span id="mes-label" style="font-size:18px; font-weight:800"></span>
             <button onclick="mudarMes(1)" style="border:none; background:none; font-size:24px">❯</button>
         </div>
-        <div id="grid-header" style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:10px; font-weight:bold; color:#8e8e93; margin-bottom:5px">
+        <div style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:10px; font-weight:bold; color:#8e8e93; margin-bottom:5px">
             <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
         </div>
         <div class="grid" id="grid"></div>
@@ -90,7 +97,6 @@
     <div id="aba-wish" class="aba">
         <div class="card">
             <strong>Lista de Desejos / Futuro</strong>
-            <p style="font-size: 11px; color: #666;">Itens que você planeja comprar, mas ainda não têm data.</p>
             <input type="text" id="wish-desc" placeholder="O que você quer comprar?">
             <input type="number" id="wish-valor" placeholder="Valor estimado R$" inputmode="decimal">
             <button class="btn-principal" style="background: var(--desejo);" onclick="salvarDesejo()">Adicionar à Lista</button>
@@ -103,7 +109,12 @@
 
     <div id="aba-rel" class="aba">
         <div class="card"><input type="month" id="rel-mes" onchange="gerarRel()"></div>
-        <div id="resumo-topo" class="grid-resumo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;"></div>
+        <div class="grid-resumo" id="resumo-topo"></div>
+        <div class="card" id="card-objetivo">
+            <strong>Progresso Mensal</strong>
+            <div class="progresso-container"><div id="barra-contas" class="progresso-barra" style="width: 0%"></div></div>
+            <div id="meta-detalhe" class="meta-texto"></div>
+        </div>
         <div class="card"><div id="cat-lista"></div></div>
     </div>
 </div>
@@ -134,7 +145,6 @@
 
     function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
 
-    // --- LOGICA DE LANÇAMENTOS REAIS ---
     function salvar() {
         const d = document.getElementById('data').value, v = parseFloat(document.getElementById('valor').value);
         if(!d || isNaN(v)) return alert("Preencha data e valor!");
@@ -151,31 +161,22 @@
         });
     }
 
-    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); } }
+    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); if(document.getElementById('aba-cal').classList.contains('ativa')) render(); } }
 
-    // --- LOGICA DOS DESEJOS ---
+    // DESEJOS
     function salvarDesejo() {
         const desc = document.getElementById('wish-desc').value, val = parseFloat(document.getElementById('wish-valor').value);
-        if(!desc || isNaN(val)) return alert("Informe o que é e o valor!");
+        if(!desc || isNaN(val)) return alert("Dados inválidos!");
         desejos.push({ id: Date.now(), desc, valor: val });
         localStorage.setItem('financas_desejos', JSON.stringify(desejos));
-        document.getElementById('wish-desc').value = ""; document.getElementById('wish-valor').value = "";
-        listarDesejos();
+        document.getElementById('wish-desc').value = ""; document.getElementById('wish-valor').value = ""; listarDesejos();
     }
 
     function listarDesejos() {
         const l = document.getElementById('wish-lista'), t = document.getElementById('wish-total');
-        l.innerHTML = "";
-        let soma = 0;
-        desejos.forEach(d => {
-            soma += d.valor;
-            l.innerHTML += `<div class="item">
-                <div><b>${d.desc}</b><br><small>R$ ${d.valor.toFixed(2)}</small></div>
-                <div>
-                    <button class="btn-comprar" onclick="comprarDesejo(${d.id})">COMPREI</button>
-                    <button class="btn-acao" onclick="excluirDesejo(${d.id})">🗑️</button>
-                </div>
-            </div>`;
+        l.innerHTML = ""; let soma = 0;
+        desejos.forEach(d => { soma += d.valor;
+            l.innerHTML += `<div class="item"><div><b>${d.desc}</b><br><small>R$ ${d.valor.toFixed(2)}</small></div><div><button class="btn-comprar" onclick="comprarDesejo(${d.id})">COMPREI</button><button class="btn-acao" onclick="excluirDesejo(${d.id})">🗑️</button></div></div>`;
         });
         t.innerText = `Total em Sonhos: R$ ${soma.toFixed(2)}`;
     }
@@ -184,15 +185,13 @@
 
     function comprarDesejo(id) {
         const item = desejos.find(d => d.id === id);
-        // Transforma desejo em gasto real hoje
         const hoje = new Date().toISOString().substring(0,10);
         db.push({ id: Date.now(), data: hoje, desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        excluirDesejo(id);
-        alert("Parabéns! Gasto registrado no calendário de hoje.");
+        excluirDesejo(id); alert("Parabéns pela compra!");
     }
 
-    // --- CALENDÁRIO COM RADAR AJUSTADO ---
+    // CALENDÁRIO COM RADAR
     function render() {
         const g = document.getElementById('grid'), label = document.getElementById('mes-label'), aviso = document.getElementById('aviso-rec');
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
@@ -201,7 +200,6 @@
         const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         const hoje = new Date(); hoje.setHours(0,0,0,0);
 
-        // Radar Global
         let saldoReal = 0;
         db.forEach(i => { if(new Date(i.data + "T00:00:00") < hoje) saldoReal += (i.tipo=='ganho' ? i.valor : -i.valor); });
         
@@ -214,14 +212,12 @@
         }
 
         if (dPerigo) {
-            // AJUSTE: Math.round para evitar erro de 1 dia a mais
             const diff = Math.round((dPerigo - hoje) / (1000 * 60 * 60 * 24));
             aviso.style.display = "block";
             if (diff > 0) aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dPerigo.getDate()}/${dPerigo.getMonth()+1}.<br>Faltam <b>${diff} dias</b>. Meta: <b>R$ ${(vFaltante/diff).toFixed(2)} / dia</b>.`;
             else aviso.innerHTML = `⚠️ <b>Atenção:</b> Você está no vermelho (R$ ${vFaltante.toFixed(2)}).`;
         } else { aviso.style.display = "none"; }
 
-        // Grid
         let sMes = 0;
         db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) sMes += (i.tipo=='ganho' ? i.valor : -i.valor); });
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
@@ -239,16 +235,31 @@
         }
     }
 
+    // RELATÓRIO RESTAURADO
     function gerarRel() {
         const m = document.getElementById('rel-mes').value, filtrados = db.filter(it => it.data.startsWith(m));
-        let gT=0, sT=0, cats = {};
-        filtrados.forEach(it => { if(it.tipo==='ganho') gT+=it.valor; else { sT+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
+        let gTotal=0, sTotal=0, cats = {};
+        filtrados.forEach(it => { if(it.tipo==='ganho') gTotal+=it.valor; else { sTotal+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
+        
+        const lucro = gTotal - sTotal;
+        const margem = gTotal > 0 ? ((lucro / gTotal) * 100).toFixed(1) : 0;
+        
         document.getElementById('resumo-topo').innerHTML = `
-            <div class="card" style="margin:0; text-align:center"><span>Ganhos</span><br><b style="color:var(--ganho)">R$ ${gT.toFixed(2)}</b></div>
-            <div class="card" style="margin:0; text-align:center"><span>Gastos</span><br><b style="color:var(--gasto)">R$ ${sT.toFixed(2)}</b></div>`;
-        const cl = document.getElementById('cat-lista'); cl.innerHTML = "<strong>Gastos por Categoria</strong><br><br>";
+            <div class="mini-card"><span>Ganhos</span><b style="color:var(--ganho)">R$ ${gTotal.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Gastos</span><b style="color:var(--gasto)">R$ ${sTotal.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Lucro</span><b style="color:var(--lucro)">R$ ${lucro.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Eficiência</span><b style="color:var(--lucro)">${margem}%</b></div>`;
+        
+        const totalC = filtrados.filter(f => f.tipo === 'gasto').reduce((a,b) => a + b.valor, 0);
+        const prog = totalC > 0 ? Math.min((gTotal / totalC) * 100, 100) : 0;
+        document.getElementById('barra-contas').style.width = prog + "%";
+        document.getElementById('meta-detalhe').innerHTML = `<span>Progresso: ${prog.toFixed(0)}%</span><span>Contas: R$ ${totalC.toFixed(2)}</span>`;
+        
+        const hoje = new Date(), diaA = m === hoje.toISOString().substring(0,7) ? hoje.getDate() : new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+        const cl = document.getElementById('cat-lista'); cl.innerHTML = "<strong>Custos Diários</strong><br><br>";
         Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, v]) => {
-            cl.innerHTML += `<div class="item"><span>${c}</span><span>R$ ${v.toFixed(2)}</span></div>`;
+            const cD = v / diaA, p = sTotal > 0 ? (v/sTotal*100).toFixed(0) : 0;
+            cl.innerHTML += `<div style="margin-bottom:15px"><div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600"><span>${c}</span><span>R$ ${v.toFixed(2)}</span></div><div style="font-size:11px; color:#8e8e93">Média: R$ ${cD.toFixed(2)} / dia</div><div style="background:#eee; height:6px; border-radius:3px; margin-top:4px"><div style="background:${coresCat[c]}; width:${p}%; height:100%; border-radius:3px"></div></div></div>`;
         });
     }
 
