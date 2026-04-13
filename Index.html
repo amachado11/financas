@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite v27</title>
+    <title>Finanças Master Elite v28</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -14,12 +14,12 @@
         .aba.ativa { display: block; }
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        /* ALERTA GLOBAL - SEMPRE VISÍVEL */
+        /* ALERTA GLOBAL */
         .aviso-recuperacao { background: #fff5f5; border: 2px solid #feb2b2; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; color: #c53030; display: none; text-align: center; line-height: 1.4; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { border-color: #feb2b2; } 50% { border-color: #fc8181; } 100% { border-color: #feb2b2; } }
         .aviso-recuperacao b { color: #e53e3e; font-size: 15px; }
 
-        /* GRID E OUTROS */
+        /* ANALISE */
         .grid-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .mini-card { background: white; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .mini-card span { font-size: 11px; color: #8e8e93; display: block; margin-bottom: 4px; }
@@ -27,6 +27,8 @@
         .progresso-container { background: #e5e5ea; height: 12px; border-radius: 6px; margin: 10px 0; overflow: hidden; }
         .progresso-barra { height: 100%; background: var(--ganho); transition: width 0.3s; }
         .meta-texto { font-size: 12px; color: #666; display: flex; justify-content: space-between; }
+
+        /* CALENDÁRIO */
         .seletor-mes-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .dias-semana-topo { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: bold; color: #8e8e93; margin-bottom: 5px; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #d1d1d6; border-radius: 12px; overflow: hidden; }
@@ -35,9 +37,12 @@
         .dia-n { font-weight: 700; color: #8e8e93; font-size: 11px; }
         .v-dia { font-size: 9px; line-height: 1.1; font-weight: 600; margin-top: 2px; }
         .saldo-d { margin-top: auto; font-weight: 800; text-align: right; font-size: 11px; padding-top: 3px; border-top: 1px solid #f2f2f7; }
+
+        /* NAV */
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #d1d1d6; }
         .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8e8e93; }
         .nav-btn.ativo { color: var(--primaria); font-weight: bold; }
+        
         input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #d1d1d6; font-size: 16px; margin: 4px 0; }
         .btn-principal { background: var(--primaria); color: white; border: none; font-weight: bold; }
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
@@ -69,8 +74,11 @@
             </div>
             <button class="btn-principal" id="btn-salvar" onclick="salvar()">Salvar Lançamento</button>
         </div>
-        <div id="lista-card" class="card">
-            <strong>Histórico Recente</strong>
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                <strong>Histórico</strong>
+                <input type="month" id="filtro-historico" style="width: auto; padding: 5px;" onchange="listar()">
+            </div>
             <div id="lista"></div>
         </div>
     </div>
@@ -137,7 +145,6 @@
         }
         localStorage.setItem('financas_v_final', JSON.stringify(db));
         document.getElementById('valor').value = ""; document.getElementById('desc').value = ""; listar();
-        if(document.getElementById('aba-cal').classList.contains('ativa')) render();
     }
 
     function editar(id) {
@@ -146,12 +153,12 @@
         document.getElementById('btn-salvar').innerText = "Atualizar Lançamento"; window.scrollTo(0,0);
     }
 
-    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); } }
+    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); if(document.getElementById('aba-cal').classList.contains('ativa')) render(); } }
 
     function listar() {
-        const l = document.getElementById('lista'), mesF = new Date().toISOString().substring(0,7);
+        const l = document.getElementById('lista'), mesF = document.getElementById('filtro-historico').value;
         l.innerHTML = "";
-        db.filter(i => i.data.startsWith(mesF)).sort((a,b) => b.data.localeCompare(a.data)).slice(0,10).forEach(i => {
+        db.filter(i => i.data.startsWith(mesF)).sort((a,b) => b.data.localeCompare(a.data)).forEach(i => {
             l.innerHTML += `<div class="item"><div><span class="tag" style="background:${coresCat[i.cat]}22; color:${coresCat[i.cat]}">${i.cat}</span><br><b>${i.desc}</b><br><small style="color:${i.tipo=='ganho'?'green':'red'}">R$ ${i.valor.toFixed(2)}</small></div><div><button class="btn-acao" onclick="editar(${i.id})">✎</button><button class="btn-acao" onclick="excluir(${i.id})">🗑️</button></div></div>`;
         });
     }
@@ -161,76 +168,70 @@
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
         g.innerHTML = "";
-        
         const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         const hoje = new Date(); hoje.setHours(0,0,0,0);
 
-        // --- RADAR GLOBAL (Sempre olha 60 dias pra frente a partir de HOJE) ---
-        let saldoAcumuladoReal = 0;
-        db.sort((a,b)=>a.data.localeCompare(b.data)).forEach(i => {
-            if(new Date(i.data + "T00:00:00") < hoje) saldoAcumuladoReal += (i.tipo=='ganho' ? i.valor : -i.valor);
-        });
-
-        let dataPerigo = null, valorFaltante = 0, saldoFuturo = saldoAcumuladoReal;
+        // RADAR GLOBAL
+        let saldoAtualReal = 0;
+        db.forEach(i => { if(new Date(i.data + "T00:00:00") < hoje) saldoAtualReal += (i.tipo=='ganho' ? i.valor : -i.valor); });
+        let dataPerigo = null, valorFaltante = 0, saldoFuturo = saldoAtualReal;
         for (let i = 0; i <= 60; i++) {
             let dTeste = new Date(); dTeste.setDate(hoje.getDate() + i);
             let dIso = dTeste.toISOString().substring(0,10);
             db.filter(x => x.data === dIso).forEach(l => { saldoFuturo += (l.tipo == 'ganho' ? l.valor : -l.valor); });
             if (saldoFuturo < 0 && !dataPerigo) { dataPerigo = new Date(dTeste); valorFaltante = Math.abs(saldoFuturo); }
         }
-
         if (dataPerigo) {
             const diff = Math.ceil((dataPerigo - hoje) / (1000 * 60 * 60 * 24)) + 1;
             aviso.style.display = "block";
-            if (diff > 0) aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dataPerigo.getDate()}/${dataPerigo.getMonth()+1}.<br>Faltam ${diff} dias. Meta: <b>R$ ${(valorFaltante/diff).toFixed(2)} / dia</b>.`;
+            if (diff > 0) aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dataPerigo.getDate()}/${dataPerigo.getMonth()+1}.<br>Meta: <b>R$ ${(valorFaltante/diff).toFixed(2)} / dia</b>.`;
             else aviso.innerHTML = `⚠️ <b>Atenção:</b> Você está no vermelho (R$ ${valorFaltante.toFixed(2)}).`;
         } else { aviso.style.display = "none"; }
 
-        // --- GRID DO MÊS ---
-        let saldoMes = 0;
-        db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) saldoMes += (i.tipo=='ganho' ? i.valor : -i.valor); });
-        
+        // GRID MÊS
+        let sMes = 0;
+        db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) sMes += (i.tipo=='ganho' ? i.valor : -i.valor); });
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
         for(let d=1; d<=fim; d++) {
             const dI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let gan = 0, gas = 0;
             db.filter(x => x.data === dI).forEach(i => { if(i.tipo == 'ganho') gan += i.valor; else gas += i.valor; });
-            saldoMes += (gan - gas);
+            sMes += (gan - gas);
             g.innerHTML += `<div class="dia ${dI==hoje.toISOString().substring(0,10)?'hoje':''}">
                 <span class="dia-n">${d}</span>
                 <div class="v-dia" style="color:var(--ganho)">${gan>0?'R$ '+gan.toFixed(0):''}</div>
                 <div class="v-dia" style="color:var(--gasto)">${gas>0?'R$ '+gas.toFixed(0):''}</div>
-                <div class="saldo-d" style="color:${saldoMes>=0?'#34C759':'#FF3B30'}">R$ ${saldoMes.toFixed(0)}</div>
+                <div class="saldo-d" style="color:${sMes>=0?'#34C759':'#FF3B30'}">R$ ${sMes.toFixed(0)}</div>
             </div>`;
         }
     }
 
     function gerarRel() {
         const m = document.getElementById('rel-mes').value, filtrados = db.filter(it => it.data.startsWith(m));
-        let gTotal=0, sTotal=0, cats = {};
-        filtrados.forEach(it => { if(it.tipo==='ganho') gTotal+=it.valor; else { sTotal+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
-        const lucro = gTotal - sTotal;
-        const margem = gTotal > 0 ? ((lucro / gTotal) * 100).toFixed(1) : 0;
+        let gT=0, sT=0, cats = {};
+        filtrados.forEach(it => { if(it.tipo==='ganho') gT+=it.valor; else { sT+=it.valor; cats[it.cat]=(cats[it.cat]||0)+it.valor; } });
+        const lucro = gT - sT, margem = gT > 0 ? ((lucro / gT) * 100).toFixed(1) : 0;
         document.getElementById('resumo-topo').innerHTML = `
-            <div class="mini-card"><span>Ganhos</span><b style="color:var(--ganho)">R$ ${gTotal.toFixed(2)}</b></div>
-            <div class="mini-card"><span>Gastos</span><b style="color:var(--gasto)">R$ ${sTotal.toFixed(2)}</b></div>
-            <div class="mini-card"><span>Lucro Líquido</span><b style="color:var(--lucro)">R$ ${lucro.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Ganhos</span><b style="color:var(--ganho)">R$ ${gT.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Gastos</span><b style="color:var(--gasto)">R$ ${sT.toFixed(2)}</b></div>
+            <div class="mini-card"><span>Lucro</span><b style="color:var(--lucro)">R$ ${lucro.toFixed(2)}</b></div>
             <div class="mini-card"><span>Eficiência</span><b style="color:var(--lucro)">${margem}%</b></div>`;
-        const totalC = filtrados.filter(f => f.tipo === 'gasto').reduce((a,b) => a + b.valor, 0);
-        const prog = totalC > 0 ? Math.min((gTotal / totalC) * 100, 100) : 0;
+        const tC = filtrados.filter(f => f.tipo === 'gasto').reduce((a,b) => a + b.valor, 0);
+        const prog = tC > 0 ? Math.min((gT / tC) * 100, 100) : 0;
         document.getElementById('barra-contas').style.width = prog + "%";
-        document.getElementById('meta-detalhe').innerHTML = `<span>Progresso: ${prog.toFixed(0)}%</span><span>Contas: R$ ${totalC.toFixed(2)}</span>`;
+        document.getElementById('meta-detalhe').innerHTML = `<span>Progresso: ${prog.toFixed(0)}%</span><span>Contas: R$ ${tC.toFixed(2)}</span>`;
         const hoje = new Date(), diaA = m === hoje.toISOString().substring(0,7) ? hoje.getDate() : new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
         const cl = document.getElementById('cat-lista'); cl.innerHTML = "<strong>Custos Diários</strong><br><br>";
         Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, v]) => {
-            const custoD = v / diaA, p = sTotal > 0 ? (v/sTotal*100).toFixed(0) : 0;
-            cl.innerHTML += `<div style="margin-bottom:15px"><div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600"><span>${c}</span><span>R$ ${v.toFixed(2)}</span></div><div style="font-size:11px; color:#8e8e93">Média: R$ ${custoD.toFixed(2)} / dia</div><div style="background:#eee; height:6px; border-radius:3px; margin-top:4px"><div style="background:${coresCat[c]}; width:${p}%; height:100%; border-radius:3px"></div></div></div>`;
+            const cD = v / diaA, p = sT > 0 ? (v/sT*100).toFixed(0) : 0;
+            cl.innerHTML += `<div style="margin-bottom:15px"><div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600"><span>${c}</span><span>R$ ${v.toFixed(2)}</span></div><div style="font-size:11px; color:#8e8e93">Média: R$ ${cD.toFixed(2)} / dia</div><div style="background:#eee; height:6px; border-radius:3px; margin-top:4px"><div style="background:${coresCat[c]}; width:${p}%; height:100%; border-radius:3px"></div></div></div>`;
         });
     }
 
     window.onload = () => { 
         const mes = new Date().toISOString().substring(0,7);
         document.getElementById('data').valueAsDate = new Date();
+        document.getElementById('filtro-historico').value = mes;
         document.getElementById('rel-mes').value = mes;
         listar(); render(); 
     };
