@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite v32</title>
+    <title>Finanças Master Elite v33</title>
     <style>
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --desejo: #AF52DE; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -96,8 +96,8 @@
     <div id="aba-wish" class="aba">
         <div class="card">
             <strong>Lista de Desejos</strong>
-            <input type="text" id="wish-desc" placeholder="O que você quer comprar?">
-            <input type="number" id="wish-valor" placeholder="R$ 0,00" inputmode="decimal">
+            <input type="text" id="wish-desc" placeholder="Ex: Pneu Novo">
+            <input type="number" id="wish-valor" placeholder="Valor R$" inputmode="decimal">
             <button class="btn-principal" style="background: var(--desejo);" onclick="salvarDesejo()">Adicionar à Lista</button>
         </div>
         <div class="card">
@@ -180,11 +180,11 @@
 
     function comprarDesejo(id) {
         const item = desejos.find(d => d.id === id);
-        db.push({ id: Date.now(), data: new Date().toISOString().substring(0,10), desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
+        db.push({ id: Date.now(), data: new Date().toLocaleDateString('sv-SE'), desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
         desejos = desejos.filter(d => d.id !== id);
         localStorage.setItem('financas_desejos', JSON.stringify(desejos));
-        listarDesejos(); alert("Adicionado aos gastos de hoje!");
+        listarDesejos();
     }
 
     function render() {
@@ -192,17 +192,21 @@
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
         g.innerHTML = "";
-        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
+        
+        // Data de hoje pura (sem horas)
         const hoje = new Date(); hoje.setHours(0,0,0,0);
 
-        // RADAR CORRIGIDO: Busca a PRIMEIRA ocorrência negativa
-        let sReal = 0;
-        db.forEach(i => { if(new Date(i.data + "T00:00:00") < hoje) sReal += (i.tipo=='ganho' ? i.valor : -i.valor); });
+        // Radar: Busca o primeiro saldo negativo
+        let saldoReal = 0;
+        db.forEach(i => {
+            let dataLote = new Date(i.data + "T00:00:00");
+            if(dataLote < hoje) saldoReal += (i.tipo=='ganho' ? i.valor : -i.valor);
+        });
         
-        let dPerigo = null, vFaltante = 0, sAcu = sReal;
-        for (let i = 0; i <= 90; i++) {
-            let dCheck = new Date(); dCheck.setDate(hoje.getDate() + i);
-            let dCheckIso = dCheck.toISOString().substring(0,10);
+        let dPerigo = null, vFaltante = 0, sAcu = saldoReal;
+        for (let i = 0; i <= 60; i++) {
+            let dCheck = new Date(hoje); dCheck.setDate(hoje.getDate() + i);
+            let dCheckIso = dCheck.toLocaleDateString('sv-SE');
             db.filter(x => x.data === dCheckIso).forEach(l => { sAcu += (l.tipo == 'ganho' ? l.valor : -l.valor); });
             if (sAcu < 0) { dPerigo = new Date(dCheck); vFaltante = Math.abs(sAcu); break; }
         }
@@ -210,19 +214,25 @@
         if (dPerigo) {
             const diff = Math.round((dPerigo - hoje) / (1000 * 60 * 60 * 24));
             aviso.style.display = "block";
-            if (diff > 0) aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dPerigo.getDate()}/${dPerigo.getMonth()+1}.<br>Faltam <b>${diff} dias</b>. Meta: <b>R$ ${(vFaltante/diff).toFixed(2)} / dia</b>.`;
-            else aviso.innerHTML = `⚠️ <b>Atenção:</b> Você está no vermelho (R$ ${vFaltante.toFixed(2)}).`;
-        } else aviso.style.display = "none";
+            if (diff > 0) {
+                aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dPerigo.getDate()}/${dPerigo.getMonth()+1}.<br>Faltam <b>${diff} dias</b>. Meta: <b>R$ ${(vFaltante/diff).toFixed(2)} / dia</b>.`;
+            } else {
+                aviso.innerHTML = `⚠️ <b>Atenção:</b> Você está no vermelho (R$ ${vFaltante.toFixed(2)}).`;
+            }
+        } else { aviso.style.display = "none"; }
 
+        // Grid do Calendário
         let sMes = 0;
         db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) sMes += (i.tipo=='ganho' ? i.valor : -i.valor); });
+        
+        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
         for(let d=1; d<=fim; d++) {
             const dI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let gan = 0, gas = 0;
             db.filter(x => x.data === dI).forEach(i => { if(i.tipo == 'ganho') gan += i.valor; else gas += i.valor; });
             sMes += (gan - gas);
-            g.innerHTML += `<div class="dia ${dI==hoje.toISOString().substring(0,10)?'hoje':''}">
+            g.innerHTML += `<div class="dia ${dI==hoje.toLocaleDateString('sv-SE')?'hoje':''}">
                 <span class="dia-n">${d}</span>
                 <div style="font-size:9px; color:var(--ganho)">${gan>0?'R$ '+gan.toFixed(0):''}</div>
                 <div style="font-size:9px; color:var(--gasto)">${gas>0?'R$ '+gas.toFixed(0):''}</div>
@@ -241,31 +251,22 @@
             <div class="mini-card"><span>Gastos</span><b style="color:var(--gasto)">R$ ${sT.toFixed(2)}</b></div>`;
         
         const hoje = new Date(), anoRel = m.split('-')[0], mesRel = m.split('-')[1];
-        const ultDiaMes = new Date(anoRel, mesRel, 0).getDate();
-        const diaA = (m === hoje.toISOString().substring(0,7)) ? hoje.getDate() : ultDiaMes;
-        const media = sT / diaA;
-        const proj = media * ultDiaMes;
+        const ultDia = new Date(anoRel, mesRel, 0).getDate();
+        const diaA = (m === hoje.toLocaleDateString('sv-SE').substring(0,7)) ? hoje.getDate() : ultDia;
         
-        document.getElementById('stats-detalhe').innerHTML = `
-            Média Diária: <b>R$ ${media.toFixed(2)}</b><br>
-            Projeção no Mês: <b style="color:var(--gasto)">R$ ${proj.toFixed(2)}</b>`;
+        const media = sT / diaA;
+        document.getElementById('stats-detalhe').innerHTML = `Média de Gasto Diário: <b>R$ ${media.toFixed(2)}</b><br>Projeção de Gasto no Mês: <b style="color:var(--gasto)">R$ ${(media * ultDia).toFixed(2)}</b>`;
         
         const cl = document.getElementById('cat-lista'); cl.innerHTML = "";
         Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c, v]) => {
             const perc = (v / sT * 100).toFixed(0);
-            cl.innerHTML += `
-                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:2px">
-                    <span>${c}</span><span>R$ ${v.toFixed(2)} (${perc}%)</span>
-                </div>
-                <div class="barra-cat-container">
-                    <div class="barra-cat-preenchimento" style="width:${perc}%; background:${coresCat[c] || '#8E8E93'}"></div>
-                </div>`;
+            cl.innerHTML += `<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:2px"><span>${c}</span><span>R$ ${v.toFixed(2)} (${perc}%)</span></div><div class="barra-cat-container"><div class="barra-cat-preenchimento" style="width:${perc}%; background:${coresCat[c] || '#8E8E93'}"></div></div>`;
         });
     }
 
     window.onload = () => { 
-        const m = new Date().toISOString().substring(0,7);
         document.getElementById('data').valueAsDate = new Date();
+        const m = new Date().toLocaleDateString('sv-SE').substring(0,7);
         document.getElementById('filtro-historico').value = m;
         document.getElementById('rel-mes').value = m;
         listar(); render();
