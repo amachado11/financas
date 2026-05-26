@@ -38,7 +38,6 @@
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
         .btn-comprar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; }
         
-        /* NOVO ESTILO DO SALDO GERAL NO TOPO */
         .saldo-topo-geral { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; }
         .saldo-topo-geral span { font-weight: bold; }
     </style>
@@ -129,30 +128,51 @@
     let dataRef = new Date();
     const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Contas': '#FF3B30', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
 
-    // FUNÇÃO ADICIONADA PARA CALCULAR O SALDO REAL ACUMULADO GERAL
+    // MODIFICADO: Calcula o saldo acumulado exatamente igual ao comportamento do seu calendário
     function atualizarSaldoGeral() {
-        let saldoAcumulado = 0;
-        db.forEach(i => {
-            saldoAcumulado += (i.tipo === 'ganho' ? i.valor : -i.valor);
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth();
+        const hojeIso = hoje.toLocaleDateString('sv-SE');
+
+        // 1. Pega o saldo inicial acumulado até o primeiro dia do mês corrente (exatamente como a sua linha 169 faz)
+        let saldoCalculado = 0;
+        db.forEach(i => { 
+            if(new Date(i.data + "T00:00:00") < new Date(anoAtual, mesAtual, 1)) {
+                saldoCalculado += (i.tipo=='ganho' ? i.valor : -i.valor); 
+            }
         });
+
+        // 2. Soma o que aconteceu dia a dia neste mês até o dia de hoje
+        const diaAtualDoMes = hoje.getDate();
+        for(let d = 1; d <= diaAtualDoMes; d++) {
+            const dI = `${anoAtual}-${String(mesAtual+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            db.filter(x => x.data === dI).forEach(i => { 
+                if(i.tipo == 'ganho') saldoCalculado += i.valor; 
+                else saldoCalculado -= i.valor; 
+            });
+        }
+
+        // 3. Aplica o valor corrigido no visor do topo
         const el = document.getElementById('saldo-geral-dinamico');
         if (el) {
-            el.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
-            el.style.color = saldoAcumulado >= 0 ? 'var(--ganho)' : 'var(--gasto)';
+            el.innerText = `R$ ${saldoCalculado.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+            el.style.color = saldoCalculado >= 0 ? 'var(--ganho)' : 'var(--gasto)';
         }
     }
 
     function ir(aba, btn) {
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
-        document.getElementById('aba-' + aba).add;
         document.getElementById('aba-' + aba).classList.add('ativa');
         btn.classList.add('ativo');
         if(aba === 'cal') render();
         if(aba === 'add') listar();
         if(aba === 'wish') listarDesejos();
         if(aba === 'rel') gerarRel();
-        atualizarSaldoGeral(); // Garante atualização ao navegar pelas abas
+        atualizarSaldoGeral();
     }
 
     function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
@@ -214,7 +234,7 @@
                 </div>
             </div>`;
         });
-        atualizarSaldoGeral(); // Mantém o topo atualizado ao listar ou filtrar
+        atualizarSaldoGeral();
     }
 
     function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
