@@ -8,7 +8,7 @@
         :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --desejo: #AF52DE; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; color: #1c1c1e; }
-        .header { background: white; padding: 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
+        .header { background: white; padding: 15px 15px 10px 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
         .conteudo { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
         .aba { display: none; }
         .aba.ativa { display: block; }
@@ -37,11 +37,18 @@
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
         .btn-comprar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; }
+        
+        /* NOVO ESTILO DO SALDO GERAL NO TOPO */
+        .saldo-topo-geral { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; }
+        .saldo-topo-geral span { font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header">Finanças Master Elite</div>
+<div class="header">
+    Finanças Master Elite
+    <div class="saldo-topo-geral">SALDO ATUAL: <span id="saldo-geral-dinamico" style="color: var(--ganho);">R$ 0,00</span></div>
+</div>
 
 <div class="conteudo">
     <div id="aba-add" class="aba ativa">
@@ -118,19 +125,34 @@
 
 <script>
     let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
-    let desejos = JSON.parse(localStorage.getItem('financas_desejos')) || [];
+    let deseos = JSON.parse(localStorage.getItem('financas_desejos')) || [];
     let dataRef = new Date();
     const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Contas': '#FF3B30', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
+
+    // FUNÇÃO ADICIONADA PARA CALCULAR O SALDO REAL ACUMULADO GERAL
+    function atualizarSaldoGeral() {
+        let saldoAcumulado = 0;
+        db.forEach(i => {
+            saldoAcumulado += (i.tipo === 'ganho' ? i.valor : -i.valor);
+        });
+        const el = document.getElementById('saldo-geral-dinamico');
+        if (el) {
+            el.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+            el.style.color = saldoAcumulado >= 0 ? 'var(--ganho)' : 'var(--gasto)';
+        }
+    }
 
     function ir(aba, btn) {
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+        document.getElementById('aba-' + aba).add;
         document.getElementById('aba-' + aba).classList.add('ativa');
         btn.classList.add('ativo');
         if(aba === 'cal') render();
         if(aba === 'add') listar();
         if(aba === 'wish') listarDesejos();
         if(aba === 'rel') gerarRel();
+        atualizarSaldoGeral(); // Garante atualização ao navegar pelas abas
     }
 
     function mudarMes(n) { dataRef.setMonth(dataRef.getMonth() + n); render(); }
@@ -146,7 +168,7 @@
         else db.push(novo);
 
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        resetForm(); listar();
+        resetForm(); listar(); render(); atualizarSaldoGeral();
     }
 
     function resetForm() {
@@ -174,7 +196,6 @@
         const l = document.getElementById('lista'), mesF = document.getElementById('filtro-historico').value;
         l.innerHTML = "";
         db.filter(i => i.data.startsWith(mesF)).sort((a,b) => b.data.localeCompare(a.data)).forEach(i => {
-            // Separa os componentes da data (ano-mes-dia) para exibir formatado
             const partesData = i.data.split('-');
             const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}` : '';
 
@@ -193,34 +214,36 @@
                 </div>
             </div>`;
         });
+        atualizarSaldoGeral(); // Mantém o topo atualizado ao listar ou filtrar
     }
 
-    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); } }
+    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
 
     function salvarDesejo() {
         const desc = document.getElementById('wish-desc').value, val = parseFloat(document.getElementById('wish-valor').value);
         if(!desc || isNaN(val)) return alert("Dados inválidos!");
-        desejos.push({ id: Date.now(), desc, valor: val });
-        localStorage.setItem('financas_desejos', JSON.stringify(desejos));
+        deseos.push({ id: Date.now(), desc, valor: val });
+        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
         document.getElementById('wish-desc').value = ""; document.getElementById('wish-valor').value = ""; listarDesejos();
     }
 
     function listarDesejos() {
         const l = document.getElementById('wish-lista'), t = document.getElementById('wish-total');
         l.innerHTML = ""; let soma = 0;
-        desejos.forEach(d => { soma += d.valor;
+        deseos.forEach(d => { soma += d.valor;
             l.innerHTML += `<div class="item"><div><b>${d.desc}</b><br><small>R$ ${d.valor.toFixed(2)}</small></div><div><button class="btn-comprar" onclick="comprarDesejo(${d.id})">COMPREI</button><button class="btn-acao" onclick="excluirDesejo(${d.id})">🗑️</button></div></div>`;
         });
         t.innerText = `Total: R$ ${soma.toFixed(2)}`;
     }
 
     function comprarDesejo(id) {
-        const item = desejos.find(d => d.id === id);
+        const item = deseos.find(d => d.id === id);
         db.push({ id: Date.now(), data: new Date().toLocaleDateString('sv-SE'), desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        desejos = desejos.filter(d => d.id !== id);
-        localStorage.setItem('financas_desejos', JSON.stringify(desejos));
+        deseos = deseos.filter(d => d.id !== id);
+        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
         listarDesejos();
+        atualizarSaldoGeral();
     }
 
     function render() {
