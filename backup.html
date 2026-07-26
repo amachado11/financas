@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finanças Master Elite v35</title>
+    <title>Finanças Master Elite v34</title>
     <style>
-        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --desejo: #AF52DE; --meta-laranja: #FF9500; }
+        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --divida: #FF3B30; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; color: #1c1c1e; }
         .header { background: white; padding: 15px 15px 10px 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
@@ -14,7 +13,8 @@
         .aba { display: none; }
         .aba.ativa { display: block; }
         .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .aviso-recuperacao { background: #fff5f5; border: 2px solid #feb2b2; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; color: #c53030; display: none; text-align: center; line-height: 1.4; }
+        .aviso-recuperacao { background: #fff5f5; border: 2px solid #feb2b2; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; color: #c53030; display: none; text-align: center; line-height: 1.4; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { border-color: #feb2b2; } 50% { border-color: #fc8181; } 100% { border-color: #feb2b2; } }
         .grid-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .mini-card { background: white; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .mini-card span { font-size: 11px; color: #8e8e93; display: block; margin-bottom: 4px; }
@@ -36,17 +36,9 @@
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
-        .btn-comprar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; }
+        .btn-pagar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; font-weight: bold; }
         .saldo-topo-geral { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; }
         .saldo-topo-geral span { font-weight: bold; }
-
-        /* Estilos Novos da Caixa de Texto Inteligente */
-        .caixa-ia { background: #f9f9fc; border: 2px dashed #007AFF; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .caixa-ia input { background: white; border: 1px solid #007AFF; }
-        .painel-confirmacao { background: #eef7ff; border-radius: 10px; padding: 12px; margin-top: 10px; font-size: 14px; border-left: 5px solid var(--primaria); display: none; }
-        .botoes-confirmacao { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-conf-sim { background: var(--ganho); color: white; border: none; font-weight: bold; padding: 8px; }
-        .btn-conf-nao { background: var(--gasto); color: white; border: none; font-weight: bold; padding: 8px; }
     </style>
 </head>
 <body>
@@ -57,26 +49,9 @@
 </div>
 
 <div class="conteudo">
+    <!-- ABA LANÇAR -->
     <div id="aba-add" class="aba ativa">
-        <div class="caixa-ia">
-            <strong style="color: var(--primaria); font-size: 14px;">⚡ Lançador Rápido por Texto</strong>
-            <input type="text" id="input-ia" placeholder="Ex: 99 de hoje 150 ou gasolina 90" oninput="processarTextoRapido()">
-            
-            <div id="painel-ia" class="painel-confirmacao">
-                <strong>Você quer lançar?</strong>
-                <div style="margin-top: 5px;" id="resumo-ia-dados"></div>
-                <div class="botoes-confirmacao">
-                    <button class="btn-conf-sim" onclick="confirmarLancamentoRapido()">✅ Confirmar e Salvar</button>
-                    <button class="btn-conf-nao" onclick="cancelarLancamentoRapido()">❌ Cancelar</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" id="form-manual" style="display: none; border-top: 3px solid var(--primaria);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <strong id="titulo-form">Lançamento Detalhado</strong>
-                <button onclick="document.getElementById('form-manual').style.display='none'" style="width:auto; padding:3px 8px; font-size:12px; background:#ddd; border:none; border-radius:5px;">Fechar</button>
-            </div>
+        <div class="card">
             <input type="hidden" id="edit-id">
             <input type="date" id="data">
             <input type="text" id="desc" placeholder="O que foi?">
@@ -94,7 +69,6 @@
             </div>
             <button class="btn-principal" id="btn-salvar" onclick="salvar()">Salvar Lançamento</button>
         </div>
-
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                 <strong>Histórico</strong>
@@ -104,6 +78,7 @@
         </div>
     </div>
 
+    <!-- ABA CALENDÁRIO -->
     <div id="aba-cal" class="aba">
         <div id="aviso-rec" class="aviso-recuperacao"></div>
         <div class="seletor-mes-container">
@@ -117,19 +92,30 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <div id="aba-wish" class="aba">
+    <!-- ABA DÍVIDAS (Substitui Desejos) -->
+    <div id="aba-dividas" class="aba">
         <div class="card">
-            <strong>Lista de Desejos</strong>
-            <input type="text" id="wish-desc" placeholder="Ex: Pneu Novo">
-            <input type="number" id="wish-valor" placeholder="Valor R$" inputmode="decimal">
-            <button class="btn-principal" style="background: var(--desejo);" onclick="salvarDesejo()">Adicionar à Lista</button>
+            <strong style="color: var(--divida);">💳 Cadastrar Nova Dívida</strong>
+            <input type="text" id="divida-nome" placeholder="Nome (Ex: Empréstimo, Cartão)">
+            
+            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Original (Total contratado):</label>
+            <input type="number" id="divida-v-orig" placeholder="R$ 0,00" inputmode="decimal">
+            
+            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Atual (Quanto resta pagar):</label>
+            <input type="number" id="divida-v-atual" placeholder="R$ 0,00" inputmode="decimal">
+            
+            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Data Inicial:</label>
+            <input type="date" id="divida-data-ini">
+            
+            <button class="btn-principal" style="background: var(--divida); margin-top: 10px;" onclick="salvarDivida()">Cadastrar Dívida</button>
         </div>
         <div class="card">
-            <div id="wish-total" style="margin-bottom: 10px; font-weight: bold; color: var(--desejo);"></div>
-            <div id="wish-lista"></div>
+            <div id="divida-total" style="margin-bottom: 10px; font-weight: bold; color: var(--divida);"></div>
+            <div id="divida-lista"></div>
         </div>
     </div>
 
+    <!-- ABA RELATÓRIO -->
     <div id="aba-rel" class="aba">
         <div class="card"><input type="month" id="rel-mes" onchange="gerarRel()"></div>
         <div class="grid-resumo" id="resumo-topo"></div>
@@ -141,120 +127,46 @@
     </div>
 </div>
 
+<!-- NAVEGAÇÃO INFERIOR -->
 <div class="nav">
     <button class="nav-btn ativo" onclick="ir('add', this)">➕<br>Lançar</button>
     <button class="nav-btn" onclick="ir('cal', this)">📅<br>Calendário</button>
-    <button class="nav-btn" onclick="ir('wish', this)">🎁<br>Desejos</button>
+    <button class="nav-btn" onclick="ir('dividas', this)">💳<br>Dívidas</button>
     <button class="nav-btn" onclick="ir('rel', this)">📊<br>Análise</button>
 </div>
 
 <script>
     let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
-    let deseos = JSON.parse(localStorage.getItem('financas_desejos')) || [];
+    let dividas = JSON.parse(localStorage.getItem('financas_dividas')) || [];
     let dataRef = new Date();
     const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Contas': '#FF3B30', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
-    let objetoTemporarioIA = null; // Guarda o lançamento interpretado pela IA antes de confirmar
-
-    // LÓGICA DO LANÇADOR RÁPIDO INTELIGENTE
-    function processarTextoRapido() {
-        const texto = document.getElementById('input-ia').value.trim().toLowerCase();
-        const painel = document.getElementById('painel-ia');
-        const resumo = document.getElementById('resumo-ia-dados');
-
-        if (!texto) { painel.style.display = 'none'; return; }
-
-        // 1. Encontra o valor numérico na frase
-        const regexNumero = /(\d+[\.,]\d+|\d+)/;
-        const correspondencia = texto.match(regexNumero);
-        if (!correspondencia) {
-            painel.style.display = 'block';
-            resumo.innerHTML = "<span style='color:red;'>Ainda não encontrei o valor... digite um número.</span>";
-            return;
-        }
-
-        let valor = parseFloat(correspondencia[0].replace(',', '.'));
-        
-        // 2. Remove o número do texto para descobrir a descrição pura
-        let descricaoPura = texto.replace(correspondencia[0], '').trim();
-
-        // 3. Define Categorias por Inteligência de palavras-chave
-        let categoria = "Outros";
-        let tipo = "gasto";
-
-        if (texto.includes("99") || texto.includes("uber") || texto.includes("shopee") || texto.includes("ganho") || texto.includes("entrada") || texto.includes("corrida")) {
-            categoria = "Salário";
-            tipo = "ganho";
-        } else if (texto.includes("gasolina") || texto.includes("combustivel") || texto.includes("posto") || texto.includes("etanol") || texto.includes("oleo") || texto.includes("manutencao") || texto.includes("pneu") || texto.includes("carro")) {
-            categoria = "Transporte";
-            tipo = "gasto";
-        } else if (texto.includes("almoço") || texto.includes("lanche") || texto.includes("janta") || texto.includes("comida") || texto.includes("restaurante") || texto.includes("pizza") || texto.includes("burguer")) {
-            categoria = "Alimentação";
-            tipo = "gasto";
-        } else if (texto.includes("luz") || texto.includes("agua") || texto.includes("aluguel") || texto.includes("internet") || texto.includes("picpay") || texto.includes("fatura") || texto.includes("emprestimo")) {
-            categoria = "Contas";
-            tipo = "gasto";
-        } else if (texto.includes("mercado") || texto.includes("rancho") || texto.includes("compras")) {
-            categoria = "Mercado";
-            tipo = "gasto";
-        }
-
-        // Limpa a descrição se sobrar algo vazio
-        if(descricaoPura === "") descricaoPura = (tipo === 'ganho') ? "Ganho por Aplicativo" : "Gasto Geral";
-
-        // Monta o objeto na memória
-        objetoTemporarioIA = {
-            id: Date.now(),
-            data: new Date().toLocaleDateString('sv-SE'),
-            desc: descricaoPura.charAt(0).toUpperCase() + descricaoPura.slice(1),
-            valor: valor,
-            tipo: tipo,
-            cat: categoria
-        };
-
-        // Mostra o resumo na tela para validação do usuário
-        painel.style.display = 'block';
-        resumo.innerHTML = `
-            📝 <b>Descrição:</b> "${objetoTemporarioIA.desc}"<br>
-            💰 <b>Valor:</b> R$ ${objetoTemporarioIA.valor.toFixed(2)}<br>
-            🏷️ <b>Categoria:</b> ${objetoTemporarioIA.cat === 'Salário' ? ' Ganho Uber/99' : objetoTemporarioIA.cat}<br>
-            🔄 <b>Tipo:</b> ${objetoTemporarioIA.tipo === 'ganho' ? '<b style="color:green">(+) Entrou</b>' : '<b style="color:red">(-) Saiu</b>'}
-        `;
-    }
-
-    function confirmarLancamentoRapido() {
-        if(objetoTemporarioIA) {
-            db.push(objetoTemporarioIA);
-            localStorage.setItem('financas_v_final', JSON.stringify(db));
-            document.getElementById('input-ia').value = "";
-            document.getElementById('painel-ia').style.display = 'none';
-            objetoTemporarioIA = null;
-            listar(); atualizarSaldoGeral();
-        }
-    }
-
-    function cancelarLancamentoRapido() {
-        document.getElementById('input-ia').value = "";
-        document.getElementById('painel-ia').style.display = 'none';
-        objetoTemporarioIA = null;
-    }
-
 
     function atualizarSaldoGeral() {
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const anoAtual = hoje.getFullYear(), mesAtual = hoje.getMonth();
-        const hojeIso = hoje.toLocaleDateString('sv-SE');
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth();
 
         let saldoCalculado = 0;
         db.forEach(i => { 
-            if(new Date(i.data + "T00:00:00") < hoje) { saldoCalculado += (i.tipo=='ganho' ? i.valor : -i.valor); }
+            if(new Date(i.data + "T00:00:00") < new Date(anoAtual, mesAtual, 1)) {
+                saldoCalculado += (i.tipo=='ganho' ? i.valor : -i.valor); 
+            }
         });
-        db.filter(x => x.data === hojeIso).forEach(i => {
-            if(i.tipo == 'ganho') saldoCalculado += i.valor; else saldoCalculado -= i.valor;
-        });
+
+        const diaAtualDoMes = hoje.getDate();
+        for(let d = 1; d <= diaAtualDoMes; d++) {
+            const dI = `${anoAtual}-${String(mesAtual+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            db.filter(x => x.data === dI).forEach(i => { 
+                if(i.tipo == 'ganho') saldoCalculado += i.valor; 
+                else saldoCalculado -= i.valor; 
+            });
+        }
 
         const el = document.getElementById('saldo-geral-dinamico');
         if (el) {
-            el.innerText = `R$ ${saldoCalculado.toLocaleString('pt-br', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            el.innerText = `R$ ${saldoCalculado.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
             el.style.color = saldoCalculado >= 0 ? 'var(--ganho)' : 'var(--gasto)';
         }
     }
@@ -265,8 +177,8 @@
         document.getElementById('aba-' + aba).classList.add('ativa');
         btn.classList.add('ativo');
         if(aba === 'cal') render();
-        if(aba === 'add') { listar(); resetForm(); }
-        if(aba === 'wish') listarDesejos();
+        if(aba === 'add') listar();
+        if(aba === 'dividas') listarDividas();
         if(aba === 'rel') gerarRel();
         atualizarSaldoGeral();
     }
@@ -280,10 +192,11 @@
 
         const novo = { id: id ? parseInt(id) : Date.now(), data: d, desc: document.getElementById('desc').value || 'S/N', valor: v, tipo: document.getElementById('tipo').value, cat: document.getElementById('cat').value };
 
-        if(id) db = db.map(i => i.id == id ? novo : i); else db.push(novo);
+        if(id) db = db.map(i => i.id == id ? novo : i);
+        else db.push(novo);
 
         localStorage.setItem('financas_v_final', JSON.stringify(db));
-        resetForm(); listar(); atualizarSaldoGeral();
+        resetForm(); listar(); render(); atualizarSaldoGeral();
     }
 
     function resetForm() {
@@ -292,7 +205,6 @@
         document.getElementById('valor').value = "";
         document.getElementById('btn-salvar').innerText = "Salvar Lançamento";
         document.getElementById('btn-salvar').style.background = "var(--primaria)";
-        document.getElementById('form-manual').style.display = 'none';
     }
 
     function editar(id) {
@@ -303,10 +215,8 @@
         document.getElementById('valor').value = i.valor;
         document.getElementById('tipo').value = i.tipo;
         document.getElementById('cat').value = i.cat;
-        document.getElementById('titulo-form').innerText = "Editar Lançamento";
         document.getElementById('btn-salvar').innerText = "Atualizar Item";
         document.getElementById('btn-salvar').style.background = "var(--edicao)";
-        document.getElementById('form-manual').style.display = 'block';
         window.scrollTo(0,0);
     }
 
@@ -335,55 +245,86 @@
         atualizarSaldoGeral();
     }
 
-    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); atualizarSaldoGeral(); } }
+    function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
 
-    function salvarDesejo() {
-        const desc = document.getElementById('wish-desc').value, val = parseFloat(document.getElementById('wish-valor').value);
-        if(!desc || isNaN(val)) return alert("Dados inválidos!");
-        deseos.push({ id: Date.now(), desc, valor: val });
-        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
-        document.getElementById('wish-desc').value = ""; document.getElementById('wish-valor').value = ""; listarDesejos();
+    /* FUNÇÕES DA ABA DE DÍVIDAS */
+    function salvarDivida() {
+        const nome = document.getElementById('divida-nome').value;
+        const vOrig = parseFloat(document.getElementById('divida-v-orig').value);
+        const vAtual = parseFloat(document.getElementById('divida-v-atual').value);
+        const dtIni = document.getElementById('divida-data-ini').value;
+
+        if(!nome || isNaN(vOrig) || isNaN(vAtual) || !dtIni) return alert("Preencha todos os campos da dívida!");
+
+        dividas.push({ id: Date.now(), nome, valorOriginal: vOrig, valorAtual: vAtual, dataInicial: dtIni });
+        localStorage.setItem('financas_dividas', JSON.stringify(dividas));
+
+        document.getElementById('divida-nome').value = "";
+        document.getElementById('divida-v-orig').value = "";
+        document.getElementById('divida-v-atual').value = "";
+        document.getElementById('divida-data-ini').value = "";
+        
+        listarDividas();
     }
 
-    function listarDesejos() {
-        const l = document.getElementById('wish-lista'), t = document.getElementById('wish-total');
-        l.innerHTML = ""; let soma = 0;
-        deseos.forEach(d => { soma += d.valor;
-            l.innerHTML += `<div class="item"><div><b>${d.desc}</b><br><small>R$ ${d.valor.toFixed(2)}</small></div><div><button class="btn-comprar" onclick="comprarDesejo(${d.id})">COMPREI</button><button class="btn-acao" onclick="excluirDesejo(${d.id})">🗑️</button></div></div>`;
+    function listarDividas() {
+        const l = document.getElementById('divida-lista'), t = document.getElementById('divida-total');
+        l.innerHTML = ""; let somaAtual = 0; let somaOriginal = 0;
+
+        dividas.forEach(d => {
+            somaAtual += d.valorAtual;
+            somaOriginal += d.valorOriginal;
+
+            const partesData = d.dataInicial.split('-');
+            const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : d.dataInicial;
+            const pago = d.valorOriginal - d.valorAtual;
+
+            l.innerHTML += `<div class="item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; width: 100%;">
+                    <b>${d.nome}</b>
+                    <span style="font-size: 11px; color: #8e8e93;">Início: ${dataFormatada}</span>
+                </div>
+                <div style="font-size: 12px; color: #444; width: 100%;">
+                    Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Resta: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
+                </div>
+                <div style="font-size: 11px; color: var(--ganho);">
+                    Já amortizado/pago: R$ ${pago > 0 ? pago.toFixed(2) : '0.00'}
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 4px;">
+                    <button class="btn-pagar" onclick="abaterDivida(${d.id})">💸 Abater Valor</button>
+                    <button class="btn-acao" onclick="excluirDivida(${d.id})">🗑️</button>
+                </div>
+            </div>`;
         });
-        t.innerText = `Total: R$ ${soma.toFixed(2)}`;
+
+        t.innerHTML = `Total Pendente: <b style="color: var(--divida);">R$ ${somaAtual.toFixed(2)}</b> <br><small style="color: #666; font-weight: normal;">(Total Original Cadastrado: R$ ${somaOriginal.toFixed(2)})</small>`;
     }
 
-    function comprarDesejo(id) {
-        const item = deseos.find(d => d.id === id);
-        db.push({ id: Date.now(), data: new Date().toLocaleDateString('sv-SE'), desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
-        localStorage.setItem('financas_v_final', JSON.stringify(db));
-        deseos = deseos.filter(d => d.id !== id);
-        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
-        listarDesejos(); atualizarSaldoGeral();
+    function abaterDivida(id) {
+        const d = dividas.find(x => x.id === id);
+        const valorAbater = prompt(`Quanto você quer abater da dívida "${d.nome}"? (Resta: R$ ${d.valorAtual.toFixed(2)})`);
+        const v = parseFloat(valorAbater);
+        if(!isNaN(v) && v > 0) {
+            d.valorAtual = Math.max(0, d.valorAtual - v);
+            localStorage.setItem('financas_dividas', JSON.stringify(dividas));
+            listarDividas();
+        }
     }
 
-    // NOVA FUNCIONALIDADE 2: Calendário com Metas em Laranja Forte Futuras
+    function excluirDivida(id) {
+        if(confirm("Remover esta dívida da lista?")) {
+            dividas = dividas.filter(d => d.id !== id);
+            localStorage.setItem('financas_dividas', JSON.stringify(dividas));
+            listarDividas();
+        }
+    }
+
     function render() {
         const g = document.getElementById('grid'), label = document.getElementById('mes-label'), aviso = document.getElementById('aviso-rec');
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
         g.innerHTML = "";
-        
         const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const hojeIso = hoje.toLocaleDateString('sv-SE');
-
-        // Cálculo Dinâmico dos Domingos de Folga para calcular a Meta Diária de Sobrevivência
-        const fimDoMes = new Date(ano, mes + 1, 0).getDate();
-        let diasUteisNoMes = 0;
-        for (let d = 1; d <= fimDoMes; d++) {
-            let diaDaSemana = new Date(ano, mes, d).getDay();
-            if (diaDaSemana !== 0) diasUteisNoMes++; // Pula domingos
-        }
-        const custoMensalMeta = 4000;
-        const valorMetaDiaria = custoMensalMeta / diasUteisNoMes; // Ex: R$ 153.84 em Junho
-
-        // Lógica do Radar de aviso
         let sReal = 0;
         db.forEach(i => { if(new Date(i.data + "T00:00:00") < hoje) sReal += (i.tipo=='ganho' ? i.valor : -i.valor); });
         let dPerigo = null, vFaltante = 0, sAcu = sReal;
@@ -399,35 +340,17 @@
             if (diff > 0) aviso.innerHTML = `⚠️ <b>Radar:</b> Saldo negativo em ${dPerigo.getDate()}/${dPerigo.getMonth()+1}.<br>Faltam <b>${diff} dias</b>. Meta: <b>R$ ${(vFaltante/diff).toFixed(2)} / dia</b>.`;
             else aviso.innerHTML = `⚠️ <b>Atenção:</b> Você está no vermelho (R$ ${vFaltante.toFixed(2)}).`;
         } else aviso.style.display = "none";
-
         let sMes = 0;
         db.forEach(i => { if(new Date(i.data + "T00:00:00") < new Date(ano, mes, 1)) sMes += (i.tipo=='ganho' ? i.valor : -i.valor); });
-        
-        const inicio = new Date(ano, mes, 1).getDay();
+        const inicio = new Date(ano, mes, 1).getDay(), fim = new Date(ano, mes + 1, 0).getDate();
         for(let i=0; i<inicio; i++) g.innerHTML += `<div class="dia" style="background:#f2f2f7"></div>`;
-        
-        for(let d=1; d<=fimDoMes; d++) {
+        for(let d=1; d<=fim; d++) {
             const dI = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const objData = new Date(dI + "T00:00:00");
-            
             let gan = 0, gas = 0;
             db.filter(x => x.data === dI).forEach(i => { if(i.tipo == 'ganho') gan += i.valor; else gas += i.valor; });
             sMes += (gan - gas);
-
-            // SISTEMA INTELIGENTE DE COR DA DATA DO QUADRADINHO (André's Strategy)
-            let corNumeroData = '#8e8e93'; // Cor cinza padrão antiga
-
-            if (objData >= hoje && objData.getDay() !== 0) { 
-                // É um dia de hoje para frente e NÃO é domingo: avalia meta
-                if (gan < valorMetaDiaria) {
-                    corNumeroData = 'var(--meta-laranja)'; // Laranja Forte: Meta em aberto
-                } else {
-                    corNumeroData = 'var(--ganho)'; // Virou Verde: Meta Batida!
-                }
-            }
-
-            g.innerHTML += `<div class="dia ${dI==hojeIso?'hoje':''}">
-                <span class="dia-n" style="color: ${corNumeroData}; font-size: 13px; font-weight: 800;">${d}</span>
+            g.innerHTML += `<div class="dia ${dI==hoje.toLocaleDateString('sv-SE')?'hoje':''}">
+                <span class="dia-n">${d}</span>
                 <div style="font-size:9px; color:var(--ganho)">${gan>0?'R$ '+gan.toFixed(0):''}</div>
                 <div style="font-size:9px; color:var(--gasto)">${gas>0?'R$ '+gas.toFixed(0):''}</div>
                 <div class="saldo-d" style="color:${sMes>=0?'var(--ganho)':'var(--gasto)'}">R$ ${sMes.toFixed(0)}</div>
@@ -453,6 +376,7 @@
 
     window.onload = () => { 
         document.getElementById('data').valueAsDate = new Date();
+        document.getElementById('divida-data-ini').valueAsDate = new Date();
         const m = new Date().toLocaleDateString('sv-SE').substring(0,7);
         document.getElementById('filtro-historico').value = m;
         document.getElementById('rel-mes').value = m;
