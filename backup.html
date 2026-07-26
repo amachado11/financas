@@ -92,7 +92,7 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <!-- ABA DÍVIDAS (Substitui Desejos) -->
+    <!-- ABA DÍVIDAS -->
     <div id="aba-dividas" class="aba">
         <div class="card">
             <strong style="color: var(--divida);">💳 Cadastrar Nova Dívida</strong>
@@ -248,6 +248,36 @@
     function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
 
     /* FUNÇÕES DA ABA DE DÍVIDAS */
+    function calcularTempoDecorrido(dataInicialStr) {
+        if (!dataInicialStr) return '0 dias';
+        const ini = new Date(dataInicialStr + 'T00:00:00');
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+
+        if (ini > hoje) return 'Data futura';
+
+        let anos = hoje.getFullYear() - ini.getFullYear();
+        let meses = hoje.getMonth() - ini.getMonth();
+        let dias = hoje.getDate() - ini.getDate();
+
+        if (dias < 0) {
+            meses--;
+            const prevMonth = new Date(hoje.getFullYear(), hoje.getMonth(), 0).getDate();
+            dias += prevMonth;
+        }
+        if (meses < 0) {
+            anos--;
+            meses += 12;
+        }
+
+        let partes = [];
+        if (anos > 0) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
+        if (meses > 0) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`);
+        if (dias > 0 || partes.length === 0) partes.push(`${dias} ${dias === 1 ? 'dia' : 'dias'}`);
+
+        return partes.join(' e ');
+    }
+
     function salvarDivida() {
         const nome = document.getElementById('divida-nome').value;
         const vOrig = parseFloat(document.getElementById('divida-v-orig').value);
@@ -278,6 +308,7 @@
             const partesData = d.dataInicial.split('-');
             const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : d.dataInicial;
             const pago = d.valorOriginal - d.valorAtual;
+            const tempoDecorrido = calcularTempoDecorrido(d.dataInicial);
 
             l.innerHTML += `<div class="item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -287,8 +318,9 @@
                 <div style="font-size: 12px; color: #444; width: 100%;">
                     Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Resta: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
                 </div>
-                <div style="font-size: 11px; color: var(--ganho);">
-                    Já amortizado/pago: R$ ${pago > 0 ? pago.toFixed(2) : '0.00'}
+                <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; flex-wrap: wrap; gap: 4px;">
+                    <span style="color: var(--ganho);">Já amortizado/pago: R$ ${pago > 0 ? pago.toFixed(2) : '0.00'}</span>
+                    <span style="color: #666;">⏱️ Tempo: <b>${tempoDecorrido}</b></span>
                 </div>
                 <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 4px;">
                     <button class="btn-pagar" onclick="abaterDivida(${d.id})">💸 Abater Valor</button>
@@ -319,7 +351,7 @@
         }
     }
 
-    function render() {
+   function render() {
         const g = document.getElementById('grid'), label = document.getElementById('mes-label'), aviso = document.getElementById('aviso-rec');
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
