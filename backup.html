@@ -36,7 +36,6 @@
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
-        .btn-pagar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; font-weight: bold; }
         .saldo-topo-geral { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; }
         .saldo-topo-geral span { font-weight: bold; }
     </style>
@@ -95,19 +94,21 @@
     <!-- ABA DÍVIDAS -->
     <div id="aba-dividas" class="aba">
         <div class="card">
-            <strong style="color: var(--divida);">💳 Cadastrar Nova Dívida</strong>
+            <strong id="divida-form-titulo" style="color: var(--divida);">💳 Cadastrar Nova Dívida</strong>
+            <input type="hidden" id="divida-edit-id">
             <input type="text" id="divida-nome" placeholder="Nome (Ex: Empréstimo, Cartão)">
             
-            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Original (Total contratado):</label>
+            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Original (Valor Inicial):</label>
             <input type="number" id="divida-v-orig" placeholder="R$ 0,00" inputmode="decimal">
             
-            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Atual (Quanto resta pagar):</label>
+            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Atual (Quanto a dívida está hoje):</label>
             <input type="number" id="divida-v-atual" placeholder="R$ 0,00" inputmode="decimal">
             
             <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Data Inicial:</label>
             <input type="date" id="divida-data-ini">
             
-            <button class="btn-principal" style="background: var(--divida); margin-top: 10px;" onclick="salvarDivida()">Cadastrar Dívida</button>
+            <button class="btn-principal" id="divida-btn-salvar" style="background: var(--divida); margin-top: 10px;" onclick="salvarDivida()">Cadastrar Dívida</button>
+            <button id="divida-btn-cancelar" style="display:none; background:#8e8e93; color:white; border:none; font-weight:bold;" onclick="resetFormDivida()">Cancelar Edição</button>
         </div>
         <div class="card">
             <div id="divida-total" style="margin-bottom: 10px; font-weight: bold; color: var(--divida);"></div>
@@ -247,7 +248,7 @@
 
     function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
 
-    /* FUNÇÕES DA ABA DE DÍVIDAS */
+    /* FUNÇÕES DA ABA DÍVIDAS */
     function calcularTempoDecorrido(dataInicialStr) {
         if (!dataInicialStr) return '0 dias';
         const ini = new Date(dataInicialStr + 'T00:00:00');
@@ -279,6 +280,7 @@
     }
 
     function salvarDivida() {
+        const id = document.getElementById('divida-edit-id').value;
         const nome = document.getElementById('divida-nome').value;
         const vOrig = parseFloat(document.getElementById('divida-v-orig').value);
         const vAtual = parseFloat(document.getElementById('divida-v-atual').value);
@@ -286,20 +288,72 @@
 
         if(!nome || isNaN(vOrig) || isNaN(vAtual) || !dtIni) return alert("Preencha todos os campos da dívida!");
 
-        dividas.push({ id: Date.now(), nome, valorOriginal: vOrig, valorAtual: vAtual, dataInicial: dtIni });
-        localStorage.setItem('financas_dividas', JSON.stringify(dividas));
+        const novaDivida = {
+            id: id ? parseInt(id) : Date.now(),
+            nome,
+            valorOriginal: vOrig,
+            valorAtual: vAtual,
+            dataInicial: dtIni
+        };
 
-        document.getElementById('divida-nome').value = "";
-        document.getElementById('divida-v-orig').value = "";
-        document.getElementById('divida-v-atual').value = "";
-        document.getElementById('divida-data-ini').value = "";
-        
+        if(id) {
+            dividas = dividas.map(d => d.id == id ? novaDivida : d);
+        } else {
+            dividas.push(novaDivida);
+        }
+
+        localStorage.setItem('financas_dividas', JSON.stringify(dividas));
+        resetFormDivida();
         listarDividas();
     }
 
-    function listarDividas() {
+    function resetFormDivida() {
+        document.getElementById('divida-edit-id').value = "";
+        document.getElementById('divida-nome').value = "";
+        document.getElementById('divida-v-orig').value = "";
+        document.getElementById('divida-v-atual').value = "";
+        document.getElementById('divida-data-ini').valueAsDate = new Date();
+        
+        document.getElementById('divida-form-titulo').innerText = "💳 Cadastrar Nova Dívida";
+        document.getElementById('divida-btn-salvar').innerText = "Cadastrar Dívida";
+        document.getElementById('divida-btn-salvar').style.background = "var(--divida)";
+        document.getElementById('divida-btn-cancelar').style.display = "none";
+    }
+
+    function editarDivida(id) {
+        const d = dividas.find(x => x.id == id);
+        if(!d) return;
+
+        document.getElementById('divida-edit-id').value = d.id;
+        document.getElementById('divida-nome').value = d.nome;
+        document.getElementById('divida-v-orig').value = d.valorOriginal;
+        document.getElementById('divida-v-atual').value = d.valorAtual;
+        document.getElementById('divida-data-ini').value = d.dataInicial;
+
+        document.getElementById('divida-form-titulo').innerText = "✏️ Editar Dívida";
+        document.getElementById('divida-btn-salvar').innerText = "Atualizar Dívida";
+        document.getElementById('divida-btn-salvar').style.background = "var(--edicao)";
+        document.getElementById('divida-btn-cancelar').style.display = "block";
+
+        window.scrollTo(0,0);
+    }
+
+    
+                <div style="font-size: 12px; color: #444; width: 100%;">
+                    Valor Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Valor Atual: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
+                </div>
+
+                <div style="font-size: 11px; width: 100%; display: flex; flex-direction: column; gap: 2px;">
+                    <span style="color: #666;">🗓️ Início: <b>${dataFormatada}</b> (⏱️ ${tempoDecorrido})</span>
+                    ${juros > 0 
+                        ? `<span style="color: var(--gasto); font-weight: bold;">📈 Juros/Acréscimos: +R$ ${juros.toFixed(2)} (${((juros/d.valorOriginal)*100).toFixed(1)}%)</span>` 
+                        : `<span style="color: var(--ganho); font-weight: 500;">📉 Redução do saldo: -R$ ${Math.abs(juros).toFixed(2)}</span>`}
+                </div>
+            </div>`;
+        })
+function listarDividas() {
         const l = document.getElementById('divida-lista'), t = document.getElementById('divida-total');
-        l.innerHTML = ""; let somaAtual = 0; let somaOriginal = 0;
+        l.innerHTML = ""; let somaAtual = 0; let somaOriginal = 0; let somaJurosTotal = 0;
 
         dividas.forEach(d => {
             somaAtual += d.valorAtual;
@@ -307,40 +361,36 @@
 
             const partesData = d.dataInicial.split('-');
             const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : d.dataInicial;
-            const pago = d.valorOriginal - d.valorAtual;
             const tempoDecorrido = calcularTempoDecorrido(d.dataInicial);
+            
+            // Juros = Valor Atual - Valor Original
+            const juros = d.valorAtual - d.valorOriginal;
+            if(juros > 0) somaJurosTotal += juros;
 
             l.innerHTML += `<div class="item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
                     <b>${d.nome}</b>
-                    <span style="font-size: 11px; color: #8e8e93;">Início: ${dataFormatada}</span>
+                    <div>
+                        <button class="btn-acao" onclick="editarDivida(${d.id})" title="Editar">✏️</button>
+                        <button class="btn-acao" onclick="excluirDivida(${d.id})" title="Excluir">🗑️</button>
+                    </div>
                 </div>
+                
                 <div style="font-size: 12px; color: #444; width: 100%;">
-                    Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Resta: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
+                    Valor Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Valor Atual: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; flex-wrap: wrap; gap: 4px;">
-                    <span style="color: var(--ganho);">Já amortizado/pago: R$ ${pago > 0 ? pago.toFixed(2) : '0.00'}</span>
-                    <span style="color: #666;">⏱️ Tempo: <b>${tempoDecorrido}</b></span>
-                </div>
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 4px;">
-                    <button class="btn-pagar" onclick="abaterDivida(${d.id})">💸 Abater Valor</button>
-                    <button class="btn-acao" onclick="excluirDivida(${d.id})">🗑️</button>
+
+                <div style="font-size: 11px; width: 100%; display: flex; flex-direction: column; gap: 2px;">
+                    <span style="color: #666;">🗓️ Início: <b>${dataFormatada}</b> (⏱️ ${tempoDecorrido})</span>
+                    ${juros > 0 
+                        ? `<span style="color: var(--gasto); font-weight: bold;">📈 Juros/Acréscimos: +R$ ${juros.toFixed(2)} (${((juros/d.valorOriginal)*100).toFixed(1)}%)</span>` 
+                        : `<span style="color: var(--ganho); font-weight: 500;">📉 Redução do saldo: -R$ ${Math.abs(juros).toFixed(2)}</span>`}
                 </div>
             </div>`;
         });
 
-        t.innerHTML = `Total Pendente: <b style="color: var(--divida);">R$ ${somaAtual.toFixed(2)}</b> <br><small style="color: #666; font-weight: normal;">(Total Original Cadastrado: R$ ${somaOriginal.toFixed(2)})</small>`;
-    }
-
-    function abaterDivida(id) {
-        const d = dividas.find(x => x.id === id);
-        const valorAbater = prompt(`Quanto você quer abater da dívida "${d.nome}"? (Resta: R$ ${d.valorAtual.toFixed(2)})`);
-        const v = parseFloat(valorAbater);
-        if(!isNaN(v) && v > 0) {
-            d.valorAtual = Math.max(0, d.valorAtual - v);
-            localStorage.setItem('financas_dividas', JSON.stringify(dividas));
-            listarDividas();
-        }
+        t.innerHTML = `Total Atual: <b style="color: var(--divida);">R$ ${somaAtual.toFixed(2)}</b> 
+        <br><small style="color: #666; font-weight: normal;">Original: R$ ${somaOriginal.toFixed(2)} | Juros Acumulados: R$ ${somaJurosTotal.toFixed(2)}</small>`;
     }
 
     function excluirDivida(id) {
@@ -351,7 +401,7 @@
         }
     }
 
-   function render() {
+    function render() {
         const g = document.getElementById('grid'), label = document.getElementById('mes-label'), aviso = document.getElementById('aviso-rec');
         const ano = dataRef.getFullYear(), mes = dataRef.getMonth();
         label.innerText = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][mes] + " " + ano;
