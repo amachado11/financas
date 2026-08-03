@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Finanças Master Elite v34</title>
     <style>
-        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --divida: #FF3B30; }
+        :root { --primaria: #007AFF; --ganho: #34C759; --gasto: #FF3B30; --fundo: #F2F2F7; --edicao: #FF9500; --lucro: #5856D6; --desejo: #AF52DE; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--fundo); height: 100vh; display: flex; flex-direction: column; color: #1c1c1e; }
         .header { background: white; padding: 15px 15px 10px 15px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold; flex-shrink: 0; }
@@ -36,6 +36,8 @@
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
         .btn-acao { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; width: auto; }
+        .btn-comprar { background: var(--ganho); color: white; font-size: 10px; padding: 5px 10px; border-radius: 8px; border: none; width: auto; }
+        
         .saldo-topo-geral { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; }
         .saldo-topo-geral span { font-weight: bold; }
     </style>
@@ -48,7 +50,6 @@
 </div>
 
 <div class="conteudo">
-    <!-- ABA LANÇAR -->
     <div id="aba-add" class="aba ativa">
         <div class="card">
             <input type="hidden" id="edit-id">
@@ -67,6 +68,11 @@
                 <select id="tipo" style="flex:1.2"><option value="gasto">(-) Saiu</option><option value="ganho">(+) Entrou</option></select>
             </div>
             <button class="btn-principal" id="btn-salvar" onclick="salvar()">Salvar Lançamento</button>
+            
+            <!-- BOTÃO DE IMPORTAÇÃO SEGURO -->
+            <button type="button" onclick="importarLoteFerias()" style="background: #5856D6; color: white; margin-top: 10px; font-weight: bold; border: none;">
+                🚀 Importar Gastos das Férias
+            </button>
         </div>
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
@@ -77,7 +83,6 @@
         </div>
     </div>
 
-    <!-- ABA CALENDÁRIO -->
     <div id="aba-cal" class="aba">
         <div id="aviso-rec" class="aviso-recuperacao"></div>
         <div class="seletor-mes-container">
@@ -91,32 +96,19 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <!-- ABA DÍVIDAS -->
-    <div id="aba-dividas" class="aba">
+    <div id="aba-wish" class="aba">
         <div class="card">
-            <strong id="divida-form-titulo" style="color: var(--divida);">💳 Cadastrar Nova Dívida</strong>
-            <input type="hidden" id="divida-edit-id">
-            <input type="text" id="divida-nome" placeholder="Nome (Ex: Empréstimo, Cartão)">
-            
-            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Original (Valor Inicial):</label>
-            <input type="number" id="divida-v-orig" placeholder="R$ 0,00" inputmode="decimal">
-            
-            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Valor Atual (Quanto a dívida está hoje):</label>
-            <input type="number" id="divida-v-atual" placeholder="R$ 0,00" inputmode="decimal">
-            
-            <label style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Data Inicial:</label>
-            <input type="date" id="divida-data-ini">
-            
-            <button class="btn-principal" id="divida-btn-salvar" style="background: var(--divida); margin-top: 10px;" onclick="salvarDivida()">Cadastrar Dívida</button>
-            <button id="divida-btn-cancelar" style="display:none; background:#8e8e93; color:white; border:none; font-weight:bold;" onclick="resetFormDivida()">Cancelar Edição</button>
+            <strong>Lista de Desejos</strong>
+            <input type="text" id="wish-desc" placeholder="Ex: Pneu Novo">
+            <input type="number" id="wish-valor" placeholder="Valor R$" inputmode="decimal">
+            <button class="btn-principal" style="background: var(--desejo);" onclick="salvarDesejo()">Adicionar à Lista</button>
         </div>
         <div class="card">
-            <div id="divida-total" style="margin-bottom: 10px; font-weight: bold; color: var(--divida);"></div>
-            <div id="divida-lista"></div>
+            <div id="wish-total" style="margin-bottom: 10px; font-weight: bold; color: var(--desejo);"></div>
+            <div id="wish-lista"></div>
         </div>
     </div>
 
-    <!-- ABA RELATÓRIO -->
     <div id="aba-rel" class="aba">
         <div class="card"><input type="month" id="rel-mes" onchange="gerarRel()"></div>
         <div class="grid-resumo" id="resumo-topo"></div>
@@ -128,24 +120,23 @@
     </div>
 </div>
 
-<!-- NAVEGAÇÃO INFERIOR -->
 <div class="nav">
     <button class="nav-btn ativo" onclick="ir('add', this)">➕<br>Lançar</button>
     <button class="nav-btn" onclick="ir('cal', this)">📅<br>Calendário</button>
-    <button class="nav-btn" onclick="ir('dividas', this)">💳<br>Dívidas</button>
+    <button class="nav-btn" onclick="ir('wish', this)">🎁<br>Desejos</button>
     <button class="nav-btn" onclick="ir('rel', this)">📊<br>Análise</button>
 </div>
 
 <script>
     let db = JSON.parse(localStorage.getItem('financas_v_final')) || [];
-    let dividas = JSON.parse(localStorage.getItem('financas_dividas')) || [];
+    let deseos = JSON.parse(localStorage.getItem('financas_desejos')) || [];
     let dataRef = new Date();
     const coresCat = {'Alimentação': '#FF9500', 'Transporte': '#5AC8FA', 'Contas': '#FF3B30', 'Mercado': '#FFCC00', 'Salário': '#34C759', 'Outros': '#8E8E93'};
 
     function atualizarSaldoGeral() {
         const hoje = new Date();
         hoje.setHours(0,0,0,0);
-
+        
         const anoAtual = hoje.getFullYear();
         const mesAtual = hoje.getMonth();
 
@@ -179,7 +170,7 @@
         btn.classList.add('ativo');
         if(aba === 'cal') render();
         if(aba === 'add') listar();
-        if(aba === 'dividas') listarDividas();
+        if(aba === 'wish') listarDesejos();
         if(aba === 'rel') gerarRel();
         atualizarSaldoGeral();
     }
@@ -248,144 +239,31 @@
 
     function excluir(id) { if(confirm("Apagar?")) { db = db.filter(i => i.id != id); localStorage.setItem('financas_v_final', JSON.stringify(db)); listar(); render(); atualizarSaldoGeral(); } }
 
-    /* FUNÇÕES DA ABA DÍVIDAS */
-    function calcularTempoDecorrido(dataInicialStr) {
-        if (!dataInicialStr) return '0 dias';
-        const ini = new Date(dataInicialStr + 'T00:00:00');
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-
-        if (ini > hoje) return 'Data futura';
-
-        let anos = hoje.getFullYear() - ini.getFullYear();
-        let meses = hoje.getMonth() - ini.getMonth();
-        let dias = hoje.getDate() - ini.getDate();
-
-        if (dias < 0) {
-            meses--;
-            const prevMonth = new Date(hoje.getFullYear(), hoje.getMonth(), 0).getDate();
-            dias += prevMonth;
-        }
-        if (meses < 0) {
-            anos--;
-            meses += 12;
-        }
-
-        let partes = [];
-        if (anos > 0) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
-        if (meses > 0) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`);
-        if (dias > 0 || partes.length === 0) partes.push(`${dias} ${dias === 1 ? 'dia' : 'dias'}`);
-
-        return partes.join(' e ');
+    function salvarDesejo() {
+        const desc = document.getElementById('wish-desc').value, val = parseFloat(document.getElementById('wish-valor').value);
+        if(!desc || isNaN(val)) return alert("Dados inválidos!");
+        deseos.push({ id: Date.now(), desc, valor: val });
+        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
+        document.getElementById('wish-desc').value = ""; document.getElementById('wish-valor').value = ""; listarDesejos();
     }
 
-    function salvarDivida() {
-        const id = document.getElementById('divida-edit-id').value;
-        const nome = document.getElementById('divida-nome').value;
-        const vOrig = parseFloat(document.getElementById('divida-v-orig').value);
-        const vAtual = parseFloat(document.getElementById('divida-v-atual').value);
-        const dtIni = document.getElementById('divida-data-ini').value;
-
-        if(!nome || isNaN(vOrig) || isNaN(vAtual) || !dtIni) return alert("Preencha todos os campos da dívida!");
-
-        const novaDivida = {
-            id: id ? parseInt(id) : Date.now(),
-            nome,
-            valorOriginal: vOrig,
-            valorAtual: vAtual,
-            dataInicial: dtIni
-        };
-
-        if(id) {
-            dividas = dividas.map(d => d.id == id ? novaDivida : d);
-        } else {
-            dividas.push(novaDivida);
-        }
-
-        localStorage.setItem('financas_dividas', JSON.stringify(dividas));
-        resetFormDivida();
-        listarDividas();
-    }
-
-    function resetFormDivida() {
-        document.getElementById('divida-edit-id').value = "";
-        document.getElementById('divida-nome').value = "";
-        document.getElementById('divida-v-orig').value = "";
-        document.getElementById('divida-v-atual').value = "";
-        document.getElementById('divida-data-ini').valueAsDate = new Date();
-        
-        document.getElementById('divida-form-titulo').innerText = "💳 Cadastrar Nova Dívida";
-        document.getElementById('divida-btn-salvar').innerText = "Cadastrar Dívida";
-        document.getElementById('divida-btn-salvar').style.background = "var(--divida)";
-        document.getElementById('divida-btn-cancelar').style.display = "none";
-    }
-
-    function editarDivida(id) {
-        const d = dividas.find(x => x.id == id);
-        if(!d) return;
-
-        document.getElementById('divida-edit-id').value = d.id;
-        document.getElementById('divida-nome').value = d.nome;
-        document.getElementById('divida-v-orig').value = d.valorOriginal;
-        document.getElementById('divida-v-atual').value = d.valorAtual;
-        document.getElementById('divida-data-ini').value = d.dataInicial;
-
-        document.getElementById('divida-form-titulo').innerText = "✏️ Editar Dívida";
-        document.getElementById('divida-btn-salvar').innerText = "Atualizar Dívida";
-        document.getElementById('divida-btn-salvar').style.background = "var(--edicao)";
-        document.getElementById('divida-btn-cancelar').style.display = "block";
-
-        window.scrollTo(0,0);
-    }
-
-    function listarDividas() {
-        const l = document.getElementById('divida-lista'), t = document.getElementById('divida-total');
-        l.innerHTML = ""; let somaAtual = 0; let somaOriginal = 0; let somaJurosTotal = 0;
-
-        dividas.forEach(d => {
-            somaAtual += d.valorAtual;
-            somaOriginal += d.valorOriginal;
-
-            const partesData = d.dataInicial.split('-');
-            const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : d.dataInicial;
-            const tempoDecorrido = calcularTempoDecorrido(d.dataInicial);
-            
-            // Juros = Valor Atual - Valor Original
-            const juros = d.valorAtual - d.valorOriginal;
-            if(juros > 0) somaJurosTotal += juros;
-
-            l.innerHTML += `<div class="item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-                <div style="display: flex; justify-content: space-between; width: 100%;">
-                    <b>${d.nome}</b>
-                    <div>
-                        <button class="btn-acao" onclick="editarDivida(${d.id})" title="Editar">✏️</button>
-                        <button class="btn-acao" onclick="excluirDivida(${d.id})" title="Excluir">🗑️</button>
-                    </div>
-                </div>
-                
-                <div style="font-size: 12px; color: #444; width: 100%;">
-                    Valor Original: <b>R$ ${d.valorOriginal.toFixed(2)}</b> | Valor Atual: <b style="color: var(--divida);">R$ ${d.valorAtual.toFixed(2)}</b>
-                </div>
-
-                <div style="font-size: 11px; width: 100%; display: flex; flex-direction: column; gap: 2px;">
-                    <span style="color: #666;">🗓️ Início: <b>${dataFormatada}</b> (⏱️ ${tempoDecorrido})</span>
-                    ${juros > 0 
-                        ? `<span style="color: var(--gasto); font-weight: bold;">📈 Juros/Acréscimos: +R$ ${juros.toFixed(2)} (${((juros/d.valorOriginal)*100).toFixed(1)}%)</span>` 
-                        : `<span style="color: var(--ganho); font-weight: 500;">📉 Redução do saldo: -R$ ${Math.abs(juros).toFixed(2)}</span>`}
-                </div>
-            </div>`;
+    function listarDesejos() {
+        const l = document.getElementById('wish-lista'), t = document.getElementById('wish-total');
+        l.innerHTML = ""; let soma = 0;
+        deseos.forEach(d => { soma += d.valor;
+            l.innerHTML += `<div class="item"><div><b>${d.desc}</b><br><small>R$ ${d.valor.toFixed(2)}</small></div><div><button class="btn-comprar" onclick="comprarDesejo(${d.id})">COMPREI</button><button class="btn-acao" onclick="excluirDesejo(${d.id})">🗑️</button></div></div>`;
         });
-
-        t.innerHTML = `Total Atual: <b style="color: var(--divida);">R$ ${somaAtual.toFixed(2)}</b> 
-        <br><small style="color: #666; font-weight: normal;">Original: R$ ${somaOriginal.toFixed(2)} | Juros Acumulados: R$ ${somaJurosTotal.toFixed(2)}</small>`;
+        t.innerText = `Total: R$ ${soma.toFixed(2)}`;
     }
 
-    function excluirDivida(id) {
-        if(confirm("Remover esta dívida da lista?")) {
-            dividas = dividas.filter(d => d.id !== id);
-            localStorage.setItem('financas_dividas', JSON.stringify(dividas));
-            listarDividas();
-        }
+    function comprarDesejo(id) {
+        const item = deseos.find(d => d.id === id);
+        db.push({ id: Date.now(), data: new Date().toLocaleDateString('sv-SE'), desc: "[Desejo] " + item.desc, valor: item.valor, tipo: 'gasto', cat: 'Outros' });
+        localStorage.setItem('financas_v_final', JSON.stringify(db));
+        deseos = deseos.filter(d => d.id !== id);
+        localStorage.setItem('financas_desejos', JSON.stringify(deseos));
+        listarDesejos();
+        atualizarSaldoGeral();
     }
 
     function render() {
@@ -443,9 +321,65 @@
         });
     }
 
+    // FUNÇÃO QUE FAZ A MÁGICA SEM APAGAR NADA
+    function importarLoteFerias() {
+        const novos = [
+          { "data": "2026-07-23", "desc": "Gasolina", "valor": 97.45, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-23", "desc": "Mercado", "valor": 43.36, "tipo": "gasto", "cat": "Mercado" },
+          { "data": "2026-07-23", "desc": "shopee", "valor": 259.00, "tipo": "gasto", "cat": "Outros" },
+          { "data": "2026-07-23", "desc": "Ganho 99", "valor": 65.96, "tipo": "ganho", "cat": "Salário" },
+          { "data": "2026-07-23", "desc": "Gasolina", "valor": 173.70, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-23", "desc": "empréstimo mãe", "valor": 1000.00, "tipo": "gasto", "cat": "Outros" },
+          { "data": "2026-07-24", "desc": "Gasolina", "valor": 162.14, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-24", "desc": "Chopp", "valor": 68.87, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-24", "desc": "Cashback", "valor": 0.01, "tipo": "ganho", "cat": "Outros" },
+          { "data": "2026-07-27", "desc": "Bebidas Férias", "valor": 78.89, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-27", "desc": "Férias churrasco", "valor": 233.80, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-27", "desc": "Energético Férias", "valor": 8.99, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-28", "desc": "Feijoada Férias", "valor": 114.67, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-29", "desc": "Bebidas Férias", "valor": 26.96, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-29", "desc": "Bebidas Férias", "valor": 112.56, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-29", "desc": "Bebidas Férias", "valor": 36.05, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-29", "desc": "Reembolso Bebidas", "valor": 56.00, "tipo": "ganho", "cat": "Outros" },
+          { "data": "2026-07-29", "desc": "reembolso Bebidas", "valor": 35.00, "tipo": "ganho", "cat": "Outros" },
+          { "data": "2026-07-30", "desc": "Bebidas Férias", "valor": 22.98, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-30", "desc": "Bebidas Férias", "valor": 44.34, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-30", "desc": "Bebidas Férias", "valor": 18.05, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-30", "desc": "Bebidas Férias", "valor": 37.03, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 3.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Besteira Estrada", "valor": 27.98, "tipo": "gasto", "cat": "Alimentação" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Pedágio", "valor": 6.60, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Gasolina", "valor": 90.61, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-07-31", "desc": "Cerveja Juliana", "valor": 35.96, "tipo": "gasto", "cat": "Outros" },
+          { "data": "2026-07-31", "desc": "Motel Juliana", "valor": 149.00, "tipo": "gasto", "cat": "Outros" },
+          { "data": "2026-07-31", "desc": "cashback", "valor": 0.01, "tipo": "ganho", "cat": "Outros" },
+          { "data": "2026-08-01", "desc": "Lavagem Carro", "valor": 50.00, "tipo": "gasto", "cat": "Transporte" },
+          { "data": "2026-08-02", "desc": "Ganho 99", "valor": 61.10, "tipo": "ganho", "cat": "Salário" },
+          { "data": "2026-08-02", "desc": "Ganho Uber", "valor": 8.24, "tipo": "ganho", "cat": "Salário" }
+        ];
+
+        let t = Date.now();
+        novos.forEach((n, i) => {
+            db.push({ id: t + i, ...n });
+        });
+
+        localStorage.setItem('financas_v_final', JSON.stringify(db));
+        listar(); render(); atualizarSaldoGeral();
+        alert("🚀 42 lançamentos importados com sucesso!");
+    }
+
     window.onload = () => { 
         document.getElementById('data').valueAsDate = new Date();
-        document.getElementById('divida-data-ini').valueAsDate = new Date();
         const m = new Date().toLocaleDateString('sv-SE').substring(0,7);
         document.getElementById('filtro-historico').value = m;
         document.getElementById('rel-mes').value = m;
