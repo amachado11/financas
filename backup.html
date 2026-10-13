@@ -21,7 +21,7 @@
             padding: 24px;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
             text-align: center;
         }
@@ -62,10 +62,10 @@
 <body>
 
 <div class="card">
-    <h2>🚀 Importação em Lote</h2>
-    <p>Clique no botão abaixo para injetar todos os <b>75 lançamentos</b> (22/08 a 14/09) diretamente no <code>localStorage</code> do seu aplicativo.</p>
+    <h2>🚀 Importação em Lote Completa</h2>
+    <p>Clique no botão abaixo para injetar todos os <b>132 lançamentos</b> (Agosto, Setembro e Outubro/2026) diretamente no <code>localStorage</code> do seu aplicativo.</p>
     
-    <button class="btn-importar" onclick="importarLoteCompleto()">Importar Lançamentos</button>
+    <button class="btn-importar" onclick="importarLoteCompleto()">Importar Todos os Lançamentos</button>
     <div id="status"></div>
 </div>
 
@@ -99,7 +99,7 @@
             { "data": "2026-08-31", "desc": "Ganho Particular", "valor": 40.00, "tipo": "ganho", "cat": "Salário" },
             { "data": "2026-08-31", "desc": "Mercado Juliana", "valor": 73.57, "tipo": "gasto", "cat": "Mercado" },
 
-            // --- SETEMBRO (01/09 a 04/09) ---
+            // --- SETEMBRO (01/09 a 14/09) ---
             { "data": "2026-09-01", "desc": "Ganho Uber", "valor": 37.01, "tipo": "ganho", "cat": "Salário" },
             { "data": "2026-09-01", "desc": "Ganho Uber", "valor": 108.21, "tipo": "ganho", "cat": "Salário" },
             { "data": "2026-09-01", "desc": "Empréstimo", "valor": 1.08, "tipo": "ganho", "cat": "Outros" },
@@ -128,8 +128,6 @@
             { "data": "2026-09-04", "desc": "Particular", "valor": 18.00, "tipo": "ganho", "cat": "Salário" },
             { "data": "2026-09-04", "desc": "Energético", "valor": 12.98, "tipo": "gasto", "cat": "Alimentação" },
             { "data": "2026-09-04", "desc": "Gasolina", "valor": 47.94, "tipo": "gasto", "cat": "Transporte" },
-
-            // --- SETEMBRO (08/09 a 14/09) ---
             { "data": "2026-09-08", "desc": "Gasolina", "valor": 95.47, "tipo": "gasto", "cat": "Transporte" },
             { "data": "2026-09-08", "desc": "Mercado Besteira", "valor": 28.50, "tipo": "gasto", "cat": "Mercado" },
             { "data": "2026-09-08", "desc": "Padaria Juliana", "valor": 69.60, "tipo": "gasto", "cat": "Alimentação" },
@@ -155,7 +153,66 @@
             { "data": "2026-09-14", "desc": "Gasolina", "valor": 50.00, "tipo": "gasto", "cat": "Transporte" },
             { "data": "2026-09-14", "desc": "Mercado Juliana", "valor": 88.46, "tipo": "gasto", "cat": "Mercado" },
             { "data": "2026-09-14", "desc": "Mercado Evandro", "valor": 71.24, "tipo": "gasto", "cat": "Mercado" },
-            { "data": "2026-09-14", "desc": "Particular", "valor": 20.00, "tipo": "ganho", "cat": "Salário" }
+            { "data": "2026-09-14", "desc": "Particular", "valor": 20.00, "tipo": "ganho", "cat": "Salário" },
+
+            // --- OUTUBRO (01/10 a 13/10) ---
+            { "data": "2026-10-01", "desc": "99 Ganho", "valor": 32.90, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-01", "desc": "Energetico", "valor": 13.90, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-01", "desc": "Ganho Particular", "valor": 220.00, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-01", "desc": "Motel Juliana", "valor": 119.00, "tipo": "gasto", "cat": "Outros" },
+            { "data": "2026-10-01", "desc": "Ganho Uber", "valor": 37.30, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-02", "desc": "Remedinho", "valor": 7.00, "tipo": "gasto", "cat": "Outros" },
+            { "data": "2026-10-02", "desc": "Pedágio Juliana", "valor": 7.10, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-02", "desc": "Farmácia Juliana", "valor": 16.49, "tipo": "gasto", "cat": "Outros" },
+            { "data": "2026-10-02", "desc": "Janta Gramado Juliana", "valor": 24.07, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-05", "desc": "99 Ganho", "valor": 13.90, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "App Uber e 99", "valor": 12.90, "tipo": "gasto", "cat": "Outros" },
+            { "data": "2026-10-05", "desc": "99 Ganho", "valor": 58.56, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "Uber Ganho", "valor": 18.48, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "Energetico", "valor": 7.99, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-05", "desc": "Empréstimo Parcela Diária", "valor": 586.14, "tipo": "ganho", "cat": "Outros" },
+            { "data": "2026-10-05", "desc": "Gasolina", "valor": 49.27, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-05", "desc": "99 Ganho", "valor": 96.93, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "Uber Ganho", "valor": 38.08, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "99 Ganho", "valor": 30.80, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-05", "desc": "Pagamento Empréstimo Parcela Diária", "valor": 60.60, "tipo": "gasto", "cat": "Contas" },
+            { "data": "2026-10-06", "desc": "Uber Ganho", "valor": 48.02, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-06", "desc": "99 Ganho", "valor": 37.00, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-06", "desc": "Gasolina", "valor": 90.89, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-06", "desc": "Pão Café da Manhã", "valor": 4.35, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-06", "desc": "Ganho Particular", "valor": 100.00, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-06", "desc": "Uber Ganho", "valor": 96.21, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-06", "desc": "99 Ganho", "valor": 16.10, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-06", "desc": "Uber Ganho", "valor": 33.79, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "99 Ganho", "valor": 73.24, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "Uber Ganho", "valor": 10.04, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "Lavagem Carro", "valor": 20.00, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-07", "desc": "Ganho Particular", "valor": 20.00, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "Gasolina", "valor": 47.57, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-07", "desc": "Uber Ganho", "valor": 85.17, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "99 Ganho", "valor": 84.80, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-07", "desc": "Uber Ganho", "valor": 49.13, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-08", "desc": "Pagamento Empréstimo Parcela Diária", "valor": 30.30, "tipo": "gasto", "cat": "Contas" },
+            { "data": "2026-10-08", "desc": "Gasolina", "valor": 50.00, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-08", "desc": "Uber Ganho", "valor": 40.54, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-08", "desc": "99 Ganho", "valor": 105.46, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-08", "desc": "Empréstimo Uber", "valor": 100.00, "tipo": "ganho", "cat": "Outros" },
+            { "data": "2026-10-08", "desc": "Aluguel Apartamento", "valor": 1367.00, "tipo": "gasto", "cat": "Contas" },
+            { "data": "2026-10-08", "desc": "Rend Pago Aplic Aut Mais", "valor": 0.01, "tipo": "ganho", "cat": "Outros" },
+            { "data": "2026-10-09", "desc": "99 Ganho", "valor": 26.10, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "Uber Ganho", "valor": 27.50, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "Energetico", "valor": 6.49, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-09", "desc": "Gasolina", "valor": 45.44, "tipo": "gasto", "cat": "Transporte" },
+            { "data": "2026-10-09", "desc": "Uber Ganho", "valor": 59.84, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "99 Ganho", "valor": 13.30, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "Vinho Juliana", "valor": 29.90, "tipo": "gasto", "cat": "Alimentação" },
+            { "data": "2026-10-09", "desc": "Pagamento Empréstimo Parcela Diária", "valor": 30.30, "tipo": "gasto", "cat": "Contas" },
+            { "data": "2026-10-09", "desc": "Uber Ganho", "valor": 32.09, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "99 Ganho", "valor": 15.96, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-09", "desc": "Uber Ganho", "valor": 13.59, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-13", "desc": "Uber Ganho", "valor": 26.80, "tipo": "ganho", "cat": "Salário" },
+            { "data": "2026-10-13", "desc": "Pagamento Empréstimo Parcela Diária", "valor": 30.30, "tipo": "gasto", "cat": "Contas" },
+            { "data": "2026-10-13", "desc": "Mercado Juliana", "valor": 49.32, "tipo": "gasto", "cat": "Mercado" }
         ];
 
         let baseId = Date.now();
